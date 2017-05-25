@@ -1,5 +1,5 @@
 import types
-
+from functools import partial
 
 class Spigot:
   '''
@@ -149,15 +149,40 @@ class Pipe:
   def __next__(self):
     return next(self.function_pipe)
 
+  @staticmethod
+  def _create_wrapper(func, iter_index):
+    '''
+    Creates a wrapped function that can be added to the class Pipe.
+    The wrapper always puts the iterable in the correct location in the func's arguments.
+
+    func - function to be wrapped
+    iter_index - the index of the arguments to pass the iterable
+    '''
+    def wrapper(self, *args, **kargs):
+      args = args[:iter_index] + (self.function_pipe,) + args[iter_index:]
+      return func(*args, **kargs)
+
+    return wrapper
+
   @classmethod
-  def add_method(cls, function, properties):
-
-
-  def map(self, func):
-    return Pipe(
-        function_pipe = map(func, self.function_pipe),
-        spigot = self.spigot,
+  def add_method(cls, method, iter_index=0):
+    setattr(
+        cls,
+        method.__name__,
+        self._create_wrapper(method, iter_index)
       )
+
+
+# def consume_all(iterator)
+# # feed the entire iterator into a zero-length deque
+# deque(iterator, maxlen=0)
+
+
+methods = (
+  (enumerate, 0),
+  (min, 0),
+  (filter, 1),
+)
 
 
 # enumerate(iterable, start=0)
@@ -170,6 +195,76 @@ class Pipe:
 
 
 import unittest
+
+class TestCreateWrapper(unittest.TestCase):
+  def test_enumerate(self):
+    data_1 = 4, 5, 6
+    w1 = create_wrapper(enumerate, 0)
+    self.assertEqual(
+        tuple(w1(data_1)),
+        tuple(enumerate(data_1))
+      )
+    self.assertEqual(
+        tuple(w1(data_1, 2)),
+        tuple(enumerate(data_1, 2))
+      )
+    self.assertEqual(
+        tuple(w1(data_1, start=3)),
+        tuple(enumerate(data_1, start=3))
+      )
+
+    # uses default for iter_index
+    w2 = create_wrapper(enumerate)
+    self.assertEqual(
+        tuple(w2(data_1)),
+        tuple(enumerate(data_1))
+      )
+    self.assertEqual(
+        tuple(w2(data_1, 2)),
+        tuple(enumerate(data_1, 2))
+      )
+    self.assertEqual(
+        tuple(w2(data_1, start=3)),
+        tuple(enumerate(data_1, start=3))
+      )
+
+  def test_min(self):
+    data_1 = 4, 5, 6
+    w_1 = create_wrapper(min, 0)
+    key_func = lambda val: 1 / val
+    self.assertEqual(
+        w_1(data_1),
+        min(data_1)
+      )
+    self.assertEqual(
+        w_1(data_1, key=key_func),
+        min(data_1, key=key_func)
+      )
+    self.assertEqual(
+        w_1(data_1, default=3),
+        min(data_1, default=3)
+      )
+    self.assertEqual(
+        w_1((), default=3),
+        min((), default=3)
+      )
+    self.assertEqual(
+        w_1(data_1, default=3, key=key_func),
+        min(data_1, default=3, key=key_func)
+      )
+
+  def test_filter(self):
+    data_1 = 4, 5, 6, 7
+    w1 = create_wrapper(filter, 1)
+    filter_func = lambda val: val > 5
+    self.assertEqual(
+        tuple(w1(data_1, filter_func)),
+        tuple(filter(filter_func, data_1))
+      )
+
+
+
+
 
 
 class TestPipe(unittest.TestCase):
