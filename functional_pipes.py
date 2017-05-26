@@ -51,44 +51,45 @@ class Valve:
 
   Example with sorted:
     >>> data_1 = 2, 1, 3
-    >>> f1 = Valve(func=sorted, pre_pipe=data_1, pass_whole=True)
-    >>> next(f1)
+    >>> valve_1 = Valve(func=sorted, pass_args=(data_1,), pass_whole=True)
+    >>> next(valve_1)
     [1, 2, 3]
-    >>> next(f1)
+    >>> next(valve_1)
     raises StopIteration
 
-    >>> f2 = Valve(func=sorted, pre_pipe=data_1, pass_whole=False)
-    >>> next(f2)
+    >>> valve_2 = Valve(func=sorted, pass_args=(data_1,), pass_whole=False)
+    >>> next(valve_2)
     1
-    >>> next(f2)
+    >>> next(valve_2)
     2
-    >>> next(f2)
+    >>> next(valve_2)
     3
-    >>> next(f2)
+    >>> next(valve_2)
     raises StopIteration
 
   Example with max:
     >>> data_1 = 2, 1, 3
-    >>> f1 = Valve(func=test_function, pre_pipe=data_1, pass_whole=True)
-    >>> result_1 = next(f1)
+    >>> valve_1 = Valve(func=test_function, pass_args=(data_1,), pass_whole=True)
+    >>> result_1 = next(valve_1)
     3
-    >>> result_1 = next(f1)
+    >>> result_1 = next(valve_1)
     raises StopIteration
   '''
 
-  def __init__(self, func, pre_pipe, pass_whole=False):
+  def __init__(self, func, pass_args, pass_kargs=None, pass_whole=False):
     '''
     func - A function that should consume the whole iterable and return an object.
       If the returned object is iterable, Valve will pass one value of the object iterator
       at a time unless pass_whole is True.
 
-    pre_pipe - A generator that can be consumed. Will probably be the pipe that has already
-      been constructed.
+    pass_args - Arguments that will be unloaded into func with the * operator like *pass_args
+    pass_kargs - Keyed arguments that will be unloaded into func with the ** operator like **pass_kargs
 
     pass_whole - If true the whole value is passed instead of breaking it up into an iterable.
     '''
     self.func = func
-    self.pre_pipe = pre_pipe
+    self.pass_args = pass_args
+    self.pass_kargs = pass_kargs if pass_kargs else {}
     self.pass_whole = pass_whole
 
     self.call_function = True
@@ -102,11 +103,11 @@ class Valve:
   def __next__(self):
     if self.pass_whole:
       if self.call_function:
-        # Pass the whole object returned by self.func(self.pre_pipe) on the first call
+        # Pass the whole object returned by self.func(*self.pass_args, **self.pass_kargs) on the first call
         self.call_function = False
-        return self.func(self.pre_pipe)
+        return self.func(*self.pass_args, **self.pass_kargs)
 
-      # raise StopIteration on the second call and reset to call self.func(self.pre_pipe) again
+      # raise StopIteration on the second call and reset to call self.func(*self.pass_args, **self.pass_kargs) again
       self.call_function = True
       raise StopIteration
 
@@ -114,9 +115,9 @@ class Valve:
       if self.call_function:
         self.call_function = False
 
-        returned = self.func(self.pre_pipe)
+        returned = self.func(*self.pass_args, **self.pass_kargs)
         try:
-          # self.func(self.pre_pipe) may not return an iterator
+          # self.func(*self.pass_args, **self.pass_kargs) may not return an iterator
           self.iterator = iter(returned)
         except TypeError:
           # create iterator from non iterator
@@ -125,7 +126,7 @@ class Valve:
       try:
         return next(self.iterator)
       except StopIteration:
-        # raise StopIteration on the second call and reset to call self.func(self.pre_pipe) again
+        # raise StopIteration on the second call and reset to call self.func(*self.pass_args, **self.pass_kargs) again
         self.call_function = True
         raise StopIteration
 
@@ -133,7 +134,7 @@ class Valve:
 class Pipe:
   def __init__(self, iterable_pre_load=None, function_pipe=None, reservoir=None, valve=False):
     # True if an iterable is data is preloaded into the pipe
-    self.preloaded = iterable_pre_load is not None
+    self.preloaded = bool(iterable_pre_load)
 
     # Iterable source for the Pipe
     self.reservoir = reservoir if reservoir else Reservoir(iterable_pre_load)
@@ -157,38 +158,53 @@ class Pipe:
   def __next__(self):
     return next(self.function_pipe)
 
-  @staticmethod
-  def _create_wrapper(func, iter_index=0, is_valve=False):
+  @classmethod
+  def add_method(cls, gener, is_valve=False, iter_index=0, gener_name=None, no_over_write=True):
     '''
-    Creates a wrapped function that can be added to the class Pipe.
-    The wrapper always puts the iterable in the correct location in the func's arguments.
+    gener - generator to be added
+    iter_index - index of the iterator argument for gener
+      For enumerate(iterable, start=0) iter_index is 0
+      For filter(function, iterable) iter_index is 1
+    gener_name - Unnecessary if gener.__name__ is defined correctly.
+      string that the gener will be called by.
+      Has precedence over gener.__name__
+    no_over_write - If True an AttributeError will be raised if there is already a method with
+      the gener_name or gener.__name__. If False any method will be overwritten.
+    '''
+    if not gener_name:
+      gener_name = gener.__name__
 
-    func - function to be wrapped
+    if no_over_write and hasattr(cls, gener_name):
+      raise AttributeError('Point class already has the gener ' + gener.__name__)
+
+    '''
+    Creates a wrapped generator that can be added to the class Pipe.
+    The wrapper always puts the iterable in the correct location in the gener's arguments.
+
+    gener - generator to be wrapped
     iter_index - the index of the arguments to pass the iterable
-    is_valve - should be true if the func is
+    is_valve - should be true if the gener is
     '''
     if is_valve:
       def wrapper(self, *args, **kargs):
 
         # arguments with the iterator in the proper location
-        args_func = args[:iter_index] + (self.function_pipe,) + args[iter_index:]
+        args_gener = args[:iter_index] + (self.function_pipe,) + args[iter_index:]
 
-        if self.valve:
-          to_return = Pipe(
-              iterable_pre_load = self.preloaded,
-              function_pipe = func(*args_func, **kargs),
-              reservoir = self.reservoir,
-              valve = True,
-            )
-
-        elif self.preloaded:
+        if self.preloaded:
           '''
           If the Pipe is preloaded with data and a valve is added the Pipe will run the
           pre loaded iterator and return the value.
           '''
-          to_return = 
+          to_return = gener(*args_gener, **kargs)
 
         else:
+          to_return = Pipe(
+              iterable_pre_load = self.preloaded,
+              function_pipe = Valve(gener, args_gener, kargs),
+              reservoir = self.reservoir,
+              valve = True,
+            )
 
         return to_return
 
@@ -197,42 +213,26 @@ class Pipe:
         args = args[:iter_index] + (self.function_pipe,) + args[iter_index:]
         return Pipe(
             iterable_pre_load = self.preloaded,
-            function_pipe = func(*args, **kargs),
+            function_pipe = gener(*args, **kargs),
             reservoir = self.reservoir,
+            valve = False
           )
 
-    return wrapper
+    # sets the wrapped function as a method in Pipe
+    setattr(cls, gener_name, wrapper)
 
   @classmethod
-  def add_method(cls, method, iter_index=0, method_name=None, no_over_write=True):
+  def add_map_method(cls, func, func_name=None, no_over_write=True):
     '''
-    method - method or function to be added
-    iter_index - index of the iterator argument for method
-      For enumerate(iterable, start=0) iter_index is 0
-      For filter(function, iterable) iter_index is 1
-    method_name - Unnecessary if method.__name__ is defined correctly.
-      string that the method will be called by.
-      Has precedence over method.__name__
-    no_over_write - If True an AttributeError will be raised if 
+    Similar to Pipe.add_method but takes a function not a generator.
+    The function becomes the mapping function.
+
+    func - must be a function.
+      if a lambda function func_name must be a string for the method name.
     '''
-    if not method_name:
-      method_name = method.__name__
-
-    if no_over_write and hasattr(cls, method_name):
-      raise AttributeError('Point class already has the method ' + method.__name__)
-
-    setattr(
-        cls,
-        method_name,
-        cls._create_wrapper(method, iter_index)
-      )
-
-  @classmethod
-  def add_map_method(cls, func, iter_index, method_name, no_over_write=True):
     cls.add_method(
-        func = func,
-        iter_index = iter_index,
-        method_name = method_name,
+        gener = partial(map, func),
+        gener_name = func_name if func_name else func.__name__,
         no_over_write = no_over_write,
       )
 
@@ -263,191 +263,150 @@ import unittest
 
 
 class TestPipe(unittest.TestCase):
-  def test_call_iter_next(self):
-    '''
-    test iter, next, call.
-    No extra methods added.
-    '''
-    data_1 = 1, 2, 3, 4
-    data_2 = 5, 6, 7, 8
+  # def test_call_iter_next(self):
+  #   '''
+  #   test iter, next, call.
+  #   No extra methods added.
+  #   '''
+  #   data_1 = 1, 2, 3, 4
+  #   data_2 = 5, 6, 7, 8
 
-    pipe1 = Pipe()
-    pipe1(data_1)
-    self.assertEqual(tuple(pipe1), data_1)
-    self.assertEqual(tuple(pipe1(data_2)), data_2)
+  #   pipe_1 = Pipe()
+  #   pipe_1(data_1)
+  #   self.assertEqual(tuple(pipe_1), data_1)
+  #   self.assertEqual(tuple(pipe_1(data_2)), data_2)
 
-    pipe1(data_1)
-    for p, d in zip(pipe1, data_1):
-      self.assertTrue(p is d)
-    for p, d in zip(pipe1(data_2), data_2):
-      self.assertTrue(p is d)
+  #   pipe_1(data_1)
+  #   for p, d in zip(pipe_1, data_1):
+  #     self.assertTrue(p is d)
+  #   for p, d in zip(pipe_1(data_2), data_2):
+  #     self.assertTrue(p is d)
 
-    pipe2 = Pipe()
-    pipe2.valve = tuple
-    self.assertEqual(pipe2(data_1), data_1)
+  #   # preloaded iterable
+  #   pipe3 = Pipe(data_1)
+  #   self.assertEqual(tuple(pipe3), data_1)
+  #   with self.assertRaises(StopIteration):
+  #     next(pipe3)
+  #   self.assertEqual(tuple(pipe3(data_2)), data_2)
 
-    # preloaded iterable
-    pipe3 = Pipe(data_1)
-    self.assertEqual(tuple(pipe3), data_1)
-    with self.assertRaises(StopIteration):
-      next(pipe3)
-    self.assertEqual(tuple(pipe3(data_2)), data_2)
+  # def test_add_method(self):
 
-  def test_add_method(self):
+  #   # enumerate
+  #   Pipe.add_method(enumerate)
+  #   self.assertTrue(hasattr(Pipe, 'enumerate'))
+  #   self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
+  #   self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
+  #   with self.assertRaises(AttributeError):
+  #     Pipe.add_method(enumerate)
+  #   with self.assertRaises(AttributeError):
+  #     Pipe.add_method(map, gener_name='enumerate')
 
-    # enumerate
-    Pipe.add_method(enumerate)
-    self.assertTrue(hasattr(Pipe, 'enumerate'))
-    self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
-    self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
-    with self.assertRaises(AttributeError):
-      Pipe.add_method(enumerate)
-    with self.assertRaises(AttributeError):
-      Pipe.add_method(map, 'enumerate')
+  #   # no_over_write is False
+  #   Pipe.add_method(enumerate, no_over_write=False)
+  #   self.assertTrue(hasattr(Pipe, 'enumerate'))
+  #   self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
+  #   self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
 
-    # no_over_write is False
-    Pipe.add_method(enumerate, no_over_write=False)
-    self.assertTrue(hasattr(Pipe, 'enumerate'))
-    self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
-    self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
+  #   Pipe.add_method(enumerate, 'enumerate', no_over_write=False)
+  #   self.assertTrue(hasattr(Pipe, 'enumerate'))
+  #   self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
+  #   self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
 
-    Pipe.add_method(enumerate, 'enumerate', no_over_write=False)
-    self.assertTrue(hasattr(Pipe, 'enumerate'))
-    self.assertTrue(isinstance(Pipe.enumerate, types.FunctionType))
-    self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
+  #   # test added method
+  #   data_1 = 1, 2, 3, 4
 
-    # test added method
-    data_1 = 1, 2, 3, 4
+  #   self.assertEqual(
+  #       tuple(Pipe(data_1).enumerate()),
+  #       tuple(enumerate(data_1))
+  #     )
+  #   self.assertEqual(
+  #       tuple(Pipe(data_1).enumerate(2)),
+  #       tuple(enumerate(data_1, 2))
+  #     )
+  #   self.assertEqual(
+  #       tuple(Pipe(data_1).enumerate(start=2)),
+  #       tuple(enumerate(data_1, start=2))
+  #     )
 
-    self.assertEqual(
-        tuple(Pipe(data_1).enumerate()),
-        tuple(enumerate(data_1))
-      )
-    self.assertEqual(
-        tuple(Pipe(data_1).enumerate(2)),
-        tuple(enumerate(data_1, 2))
-      )
-    self.assertEqual(
-        tuple(Pipe(data_1).enumerate(start=2)),
-        tuple(enumerate(data_1, start=2))
-      )
+  #   # clean up methods
+  #   delattr(Pipe, 'enumerate')
 
-    # clean up methods
-    delattr(Pipe, 'enumerate')
+  # def test_add_map_method(self):
+  #   data_1 = 1, 2, 7, 9
+  #   data_1_squared = tuple(d**2 for d in data_1)
 
-  def test_add_map_method(self):
-    Pipe.add_map_method(lambda a: a, pass)
+  #   Pipe.add_map_method(lambda a: a**2, 'square')
 
-  def test_pipe_creation_single_flow(self):
-    '''
-    Extending a Pipe with a
-    '''
-    data_1 = 1, 2, 3, 4
+  #   self.assertEqual(tuple(Pipe(data_1).square()), data_1_squared)
+
+  #   # clean up methods
+  #   delattr(Pipe, 'square')
+
+
+  # def test_pipe_creation_single_flow(self):
+  #   '''
+  #   Extending a Pipe with a
+  #   '''
+  #   data_1 = 1, 2, 3, 4
 
 
   def test_pipe_valve(self):
-    data_1 = 1, 2, 3, 4
+    data_1 = 4, 2, 8, -5
     data_1_min = min(data_1)
 
     # test method that directly passes the data through
-    Pipe.add_method(
-      partial(map, lambda val: val),
-      method_name='pass_through')
-
+    Pipe.add_map_method(lambda val: val, 'pass_through')
     # min
     Pipe.add_method(min, is_valve=True)
-    self.assertEqual(Pipe(data_1).min(), data_1_min)
 
+    # '''
+    # The Pipe has been preloaded and a valve has been added to the pipe.
+    # When the preloaded and a valve is added the reservoir should be drained
+    # by the pipe into the valve function and the result should be returned.
+    # '''
+    # self.assertEqual(
+    #     Pipe(data_1).min(),
+    #     data_1_min
+    #   )
+    # self.assertEqual(
+    #     Pipe(data_1).pass_through().min(),
+    #     data_1_min
+    #   )
+
+    '''
+    Pipe has not been preloaded and a Pipe should be returned.
+    '''
     pipe_1 = Pipe().min()
     self.assertEqual(pipe_1(data_1), data_1_min)
+    self.assertEqual(pipe_1(data_1), data_1_min)  # not a repeat
 
-    pipe2 = pipe_1
+    pipe_2 = Pipe().pass_through().min()
+    self.assertEqual(pipe_1(data_1), data_1_min)
+
+    pip_3 = Pipe().min().pass_through()
+    self.assertEqual(next(pip_3(data_1)), data_1_min)
+
+    pip_4 = Pipe().min().min()
+    self.assertEqual(pipe_1(data_1), data_1_min)
+
+    pipe_5 = pipe_1.pass_through()
+    self.assertEqual(
+        next(pipe_5(data_1)),
+        next(pip_3(data1))
+      )
+
+    pipe_6 = pipe_1.min()
+    self.assertEqual(
+        next(pipe_6(data_1)),
+        next(pip_4(data1))
+      )
 
     # clean up
     delattr(Pipe, 'pass_through')
+    delattr(Pipe, 'min')
 
 
-
-
-
-
-
-
-# class TestPipeCreateWrapper(unittest.TestCase):
-#   def test_enumerate(self):
-#     data_1 = 4, 5, 6
-#     w1 = Pipe._create_wrapper(enumerate, 0)
-#     self.assertEqual(
-#         tuple(w1(data_1)),
-#         tuple(enumerate(data_1))
-#       )
-#     self.assertEqual(
-#         tuple(w1(data_1, 2)),
-#         tuple(enumerate(data_1, 2))
-#       )
-#     self.assertEqual(
-#         tuple(w1(data_1, start=3)),
-#         tuple(enumerate(data_1, start=3))
-#       )
-
-#     # uses default for iter_index
-#     w2 = Pipe._create_wrapper(enumerate)
-#     self.assertEqual(
-#         tuple(w2(data_1)),
-#         tuple(enumerate(data_1))
-#       )
-#     self.assertEqual(
-#         tuple(w2(data_1, 2)),
-#         tuple(enumerate(data_1, 2))
-#       )
-#     self.assertEqual(
-#         tuple(w2(data_1, start=3)),
-#         tuple(enumerate(data_1, start=3))
-#       )
-
-#   def test_min(self):
-#     data_1 = 4, 5, 6
-#     w_1 = Pipe._create_wrapper(min, 0)
-#     key_func = lambda val: 1 / val
-#     self.assertEqual(
-#         w_1(data_1),
-#         min(data_1)
-#       )
-#     self.assertEqual(
-#         w_1(data_1, key=key_func),
-#         min(data_1, key=key_func)
-#       )
-#     self.assertEqual(
-#         w_1(data_1, default=3),
-#         min(data_1, default=3)
-#       )
-#     self.assertEqual(
-#         w_1((), default=3),
-#         min((), default=3)
-#       )
-#     self.assertEqual(
-#         w_1(data_1, default=3, key=key_func),
-#         min(data_1, default=3, key=key_func)
-#       )
-
-#   def test_filter(self):
-#     data_1 = 4, 5, 6, 7
-#     w1 = Pipe._create_wrapper(filter, 1)
-#     filter_func = lambda val: val > 5
-#     self.assertEqual(
-#         tuple(w1(data_1, filter_func)),
-#         tuple(filter(filter_func, data_1))
-#       )
-
-
-class TestFaucet(unittest.TestCase):
-  def test_Faucet(self):
-    data_1 = 1, 2, 3
-    f1 = Valve(tuple, data_1)
-    self.assertEqual(tuple(f1), data_1)
-    for f, d in zip(f1, data_1):
-      self.assertEqual(f, d)
-
+class TestValve(unittest.TestCase):
   def test_iterable_object(self):
     '''
     tests functions that return an iterable object
@@ -456,45 +415,54 @@ class TestFaucet(unittest.TestCase):
     test_function = sorted
 
     data_1 = 2, 1, 3
-    data_1_sorted = test_function(data_1)
     data_2 = 5, 2, 6, 7, 2, 4, 6
-    data_2_sorted = test_function(data_2)
 
     '''
     pass_whole is True
     should pass the whole sorted list back
     '''
-    f1 = Valve(func=test_function, pre_pipe=data_1, pass_whole=True)
-    f2 = Valve(func=test_function, pre_pipe=data_2, pass_whole=True)
-    result_1 = next(f1)
-    result_2 = next(f2)
-    self.assertEqual(result_1, data_1_sorted)
-    self.assertEqual(result_2, data_2_sorted)
+    valve_1 = Valve(func=test_function, pass_args=(data_1,), pass_whole=True)
+    valve_2 = Valve(func=test_function, pass_args=(data_2,), pass_whole=True)
+    result_1 = next(valve_1)
+    result_2 = next(valve_2)
+    self.assertEqual(result_1, sorted(data_1))
+    self.assertEqual(result_2, sorted(data_2))
     self.assertTrue(isinstance(result_1, list))
     self.assertTrue(isinstance(result_2, list))
 
     with self.assertRaises(StopIteration):
-      next(f1)
+      next(valve_1)
     with self.assertRaises(StopIteration):
-      next(f2)
+      next(valve_2)
 
     # test reuse with Reservoir
-    s3 = Reservoir(data_1)
-    f3 = Valve(func=test_function, pre_pipe=s3, pass_whole=True)
-    self.assertTrue(next(f3), data_1_sorted)
+    resv_3 = Reservoir(data_1)
+    valve_3 = Valve(func=test_function, pass_args=(resv_3,), pass_whole=True)
+    self.assertTrue(next(valve_3), sorted(data_1))
     with self.assertRaises(StopIteration):
-      next(f3)
+      next(valve_3)
 
-    s3(data_2)
-    self.assertTrue(next(f3), data_2_sorted)
+    resv_3(data_2)
+    self.assertTrue(next(valve_3), sorted(data_2))
 
     # pass_whole is False
-    f4 = Valve(func=test_function, pre_pipe=data_1, pass_whole=False)
-    self.assertTrue(next(f4) is data_1_sorted[0])
-    for f, d in zip(f4, data_1_sorted[1:]):
+    valve_4 = Valve(func=test_function, pass_args=(data_1,), pass_whole=False)
+    self.assertTrue(next(valve_4) is sorted(data_1)[0])
+    for f, d in zip(valve_4, sorted(data_1)[1:]):
       self.assertTrue(f is d)
 
-    
+    # pass in a karg with pass_kargs
+    valve_5 = Valve(
+        func=test_function,
+        pass_args=(data_1,),
+        pass_kargs=dict(reverse=True),
+        pass_whole=True
+      )
+    result_5 = next(valve_5)
+    self.assertEqual(result_5, sorted(data_1, reverse=True))
+    self.assertTrue(isinstance(result_5, list))
+    with self.assertRaises(StopIteration):
+      next(valve_5)
 
   def test_non_iterable_object(self):
     '''
@@ -509,18 +477,18 @@ class TestFaucet(unittest.TestCase):
     max_2 = test_function(data_2)
 
     # pass_whole is true
-    f1 = Valve(func=test_function, pre_pipe=data_1, pass_whole=True)
-    result_1 = next(f1)
+    valve_1 = Valve(func=test_function, pass_args=(data_1,), pass_whole=True)
+    result_1 = next(valve_1)
     self.assertTrue(result_1 is max_1)
     with self.assertRaises(StopIteration):
-      next(f1)
+      next(valve_1)
 
     # pass_whole is False
-    f2 = Valve(func=test_function, pre_pipe=data_1, pass_whole=False)
-    result_1 = next(f2)
+    valve_2 = Valve(func=test_function, pass_args=(data_1,), pass_whole=False)
+    result_1 = next(valve_2)
     self.assertTrue(result_1 is max_1)
     with self.assertRaises(StopIteration):
-      next(f2)
+      next(valve_2)
 
 
 class TestReservoir(unittest.TestCase):
