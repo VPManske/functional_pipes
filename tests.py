@@ -5,6 +5,25 @@ from functional_pipes import Pipe, Reservoir, Valve
 
 
 class TestPipe(unittest.TestCase):
+  def tearDown(self):
+    to_del = (
+        'enumerate',
+        'filter',
+        'func_after_iter',
+        'extra_input_last',
+        'extra_input_first',
+        'extra_input_middle',
+        'min_key_arg',
+        'min',
+        'square',
+        'pass_through',
+        'min'
+      )
+
+    for attr in to_del:
+      if hasattr(Pipe, attr):
+        delattr(Pipe, attr)
+
   def test_call_iter_next(self):
     '''
     test iter, next, call.
@@ -72,8 +91,6 @@ class TestPipe(unittest.TestCase):
     # stared arg
     Pipe.add_method
 
-    # clean up methods
-    delattr(Pipe, 'enumerate')
 
   def test_add_method_star_int(self):
     '''
@@ -196,20 +213,18 @@ class TestPipe(unittest.TestCase):
 
     # test with a valve function with a star arg
     def min_key_arg(iterable, key):
-      # return min
+      return min(iterable, key=key)
     Pipe.add_method(
-        gener = min,
+        gener = min_key_arg,
         is_valve = True,
         star_wrap = 1,
       )
+    self.assertTrue(hasattr(Pipe, 'min_key_arg'))
+    self.assertEqual(
+        Pipe(data_1).min_key_arg(lambda a, b: 1 / a),
+        (5, 6)
+      )
 
-    # clean up
-    delattr(Pipe, 'filter')
-    delattr(Pipe, 'func_after_iter')
-    delattr(Pipe, 'extra_input_last')
-    delattr(Pipe, 'extra_input_first')
-    delattr(Pipe, 'extra_input_middle')
-    delattr(Pipe, 'min')
 
   def test_add_method_star_str(self):
     '''
@@ -218,10 +233,23 @@ class TestPipe(unittest.TestCase):
     argument key in kargs.
     '''
     data_1 = (1, 2), (3, 4), (5, 6)
+    data_2 = 4, 2, 8, -5
 
+    Pipe.add_method(
+        gener = min,
+        is_valve = True,
+        star_wrap = 'key',
+      )
+    self.assertEqual(
+        Pipe(data_1).min(key=lambda a, b: 1 / a),
+        (5, 6)
+      )
+    self.assertEqual(
+        Pipe(data_2 ).min(),
+        -5
+      )
 
   # def test_add_method_star_tuple(self):
-
 
   def test_add_map_method(self):
     data_1 = 1, 2, 7, 9
@@ -231,8 +259,6 @@ class TestPipe(unittest.TestCase):
 
     self.assertEqual(tuple(Pipe(data_1).square()), data_1_squared)
 
-    # clean up methods
-    delattr(Pipe, 'square')
 
 
   # def test_pipe_creation_single_flow(self):
@@ -293,10 +319,6 @@ class TestPipe(unittest.TestCase):
         pipe_6(data_1),
         pip_4(data_1)
       )
-
-    # clean up
-    delattr(Pipe, 'pass_through')
-    delattr(Pipe, 'min')
 
 
 class TestValve(unittest.TestCase):
