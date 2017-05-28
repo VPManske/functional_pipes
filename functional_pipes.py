@@ -120,33 +120,30 @@ def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap):
   # arguments with the iterator in the proper location
   if isinstance(star_wrap, int):
     # this could be functionalized
-    print('star_wrap', star_wrap)
-    print('iter_index', iter_index)
+    # print('star_wrap', star_wrap)
+    # print('iter_index', iter_index)
     to_star = args[star_wrap] if star_wrap < iter_index else args[star_wrap - 1]
     star_function = (star_arguments(to_star)
                      if len(signature(to_star).parameters) > 1
                      else to_star)
 
-    print('args1', args)
-    split1 = args[:star_wrap if star_wrap < iter_index else star_wrap - 1]
-    split2 = args[star_wrap+1:]
-    print('split1', split1)
-    print('split2', split2)
-    args = (
-            args[:star_wrap] +
-            # (lambda to_unpack: args[star_wrap](*to_unpack),) +
-            (star_function,) +
-            args[star_wrap + 1:]
-           )
-    print('args2', args)
+    # print('args1', args)
+    split_index = star_wrap if star_wrap < iter_index else star_wrap - 1
+    # print('split_index', split_index)
+    split1 = args[:split_index]
+    split2 = args[split_index + 1:]
+    # print('split1', split1)
+    # print('split2', split2)
+    args = split1 + (star_function,) + split2
+
+    # print('args2', args)
     split1 = args[:iter_index]
     split2 = args[iter_index:]
-    print('split1', split1)
-    print('split2', split2)
+    # print('split1', split1)
+    # print('split2', split2)
     args = args[:iter_index] + (function_pipe,) + args[iter_index:]
 
-    print('args3', args)
-    return args, kargs # FOR TESTING ONLY
+    # print('args3', args)
 
   # elif isinstance(star_wrap, str):
   #   kargs = ChainMap(
@@ -163,7 +160,6 @@ def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap):
   else:
     args = args[:iter_index] + (function_pipe,) + args[iter_index:]
 
-  raise ValueError
   return args, kargs
 
 
@@ -211,7 +207,7 @@ def _create_wrapper(gener, iter_index, is_valve, empty_error, star_wrap):
 
   else:
     def wrapper(self, *args, **kargs):
-      print('wrapper2')
+      # print('wrapper2')
       args, kargs = _assemble_args(
                 function_pipe = self.function_pipe,
                 iter_index = iter_index,
@@ -220,9 +216,9 @@ def _create_wrapper(gener, iter_index, is_valve, empty_error, star_wrap):
                 star_wrap = star_wrap,
               )
 
-      print('gener', gener)
-      print('args', args)
-      print('kargs', kargs)
+      # print('gener', gener)
+      # print('args', args)
+      # print('kargs', kargs)
       return Pipe(
           iterable_pre_load = self.preloaded,
           function_pipe = gener(*args, **kargs),
