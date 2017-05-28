@@ -117,11 +117,11 @@ class TestPipe(unittest.TestCase):
       )
     self.assertTrue(hasattr(Pipe, 'filter'))
     self.assertEqual(
-        tuple(Pipe(data_1).filter(filter_1_2)),
+        tuple(Pipe(data_1).filter(filter_1_1)),
         data_1_filtered
       )
     self.assertEqual(
-        tuple(Pipe(data_1).filter(filter_1_1)),
+        tuple(Pipe(data_1).filter(filter_1_2)),
         data_1_filtered
       )
 
@@ -225,7 +225,6 @@ class TestPipe(unittest.TestCase):
         (5, 6)
       )
 
-
   def test_add_method_star_str(self):
     '''
     Tests if the star wrapper is properly applied to a function if the
@@ -249,7 +248,37 @@ class TestPipe(unittest.TestCase):
         -5
       )
 
-  # def test_add_method_star_tuple(self):
+  def test_add_method_double_star_int(self):
+    data_1 = tuple(dict(a=a, b=b) for a, b in ((1, 2), (3, 4), (5, 6)))
+
+    def min_key_arg(iterable, key):
+      return min(iterable, key=key)
+    Pipe.add_method(
+        gener = min_key_arg,
+        is_valve = True,
+        double_star_wrap = 1,
+      )
+    self.assertTrue(hasattr(Pipe, 'min_key_arg'))
+    self.assertEqual(
+        Pipe(data_1).min_key_arg(lambda a, b: 1 / a),
+        dict(a=5, b=6)
+      )
+
+  def test_add_method_double_star_str(self):
+    data_1 = tuple(dict(a=a, b=b) for a, b in ((1, 2), (3, 4), (5, 6)))
+
+    def min_key_arg(iterable, key):
+      return min(iterable, key=key)
+    Pipe.add_method(
+        gener = min_key_arg,
+        is_valve = True,
+        double_star_wrap = 'key',
+      )
+    self.assertTrue(hasattr(Pipe, 'min_key_arg'))
+    self.assertEqual(
+        Pipe(data_1).min_key_arg(key=lambda a, b: 1 / a),
+        dict(a=5, b=6)
+      )
 
   def test_add_map_method(self):
     data_1 = 1, 2, 7, 9
@@ -258,15 +287,6 @@ class TestPipe(unittest.TestCase):
     Pipe.add_map_method(lambda a: a**2, 'square')
 
     self.assertEqual(tuple(Pipe(data_1).square()), data_1_squared)
-
-
-
-  # def test_pipe_creation_single_flow(self):
-  #   '''
-  #   Extending a Pipe with a
-  #   '''
-  #   data_1 = 1, 2, 3, 4
-
 
   def test_pipe_valve(self):
     data_1 = 4, 2, 8, -5

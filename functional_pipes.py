@@ -40,6 +40,7 @@ class Pipe:
         no_over_write = True,
         empty_error = None,
         star_wrap = None,
+        double_star_wrap = None,
       ):
     '''
     gener - generator to be added
@@ -77,25 +78,71 @@ class Pipe:
     if no_over_write and hasattr(cls, gener_name):
       raise AttributeError('Pipe class already has the gener ' + gener_name)
 
-    # sets the wrapped function as a method in Pipe
-    setattr(cls, gener_name,
-      _create_wrapper(
-          gener = gener,
-          iter_index = iter_index,
-          is_valve = is_valve,
-          empty_error = empty_error,
-          star_wrap = star_wrap,
-        ))
 
-    # if star_wrap is not None:
-    #   setattr(cls, 's_' + gener_name,
-    #     _create_wrapper(
-    #         gener = gener,
-    #         iter_index = iter_index,
-    #         is_valve = is_valve,
-    #         empty_error = empty_error,
-    #         star_wrap = star_wrap,
-    #       ))
+    '''
+    Creates a wrapped generator that can be added to the class Pipe.
+    The wrapper always puts the iterable in the correct location in the gener's arguments.
+
+    gener - generator to be wrapped
+    iter_index - the index of the arguments to pass the iterable
+    is_valve - should be true if the gener is
+    '''
+    if is_valve:
+      def wrapper(self, *args, **kargs):
+
+        args, kargs = _assemble_args(
+            function_pipe = self.function_pipe,
+            iter_index = iter_index,
+            args = args,
+            kargs = kargs,
+            star_wrap = star_wrap,
+            double_star_wrap = double_star_wrap,
+          )
+
+        if self.preloaded:
+          '''
+          If the Pipe is preloaded with data and a valve is added the Pipe will run the
+          pre loaded iterator and return the value.
+          '''
+          to_return = gener(*args, **kargs)
+
+        else:
+          to_return = Pipe(
+              iterable_pre_load = self.preloaded,
+              function_pipe = Valve(
+                  func = gener,
+                  pass_args = args,
+                  pass_kargs = kargs,
+                  empty_error = empty_error,
+                ),
+              reservoir = self.reservoir,
+              valve = True,
+            )
+
+        return to_return
+
+    else:
+      def wrapper(self, *args, **kargs):
+        args, kargs = _assemble_args(
+                  function_pipe = self.function_pipe,
+                  iter_index = iter_index,
+                  args = args,
+                  kargs = kargs,
+                  star_wrap = star_wrap,
+                  double_star_wrap = double_star_wrap,
+                )
+
+        return Pipe(
+            iterable_pre_load = self.preloaded,
+            function_pipe = gener(*args, **kargs),
+            reservoir = self.reservoir,
+            valve = False,
+          )
+
+
+
+    # sets the wrapped function as a method in Pipe
+    setattr(cls, gener_name, wrapper)
 
   @classmethod
   def add_map_method(cls, func, func_name=None, no_over_write=True):
@@ -113,102 +160,54 @@ class Pipe:
       )
 
 
-def star_arguments(func):
-  def func_out(to_unpack):
-    return func(*to_unpack)
-  return func_out
+def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
+  if star_wrap is not None and double_star_wrap is not None:
+    raise ValueError('star_wrap and double_star_wrap cannot both not be None.')
 
+  elif star_wrap is not None:
+    wrap_val = star_wrap
 
-def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap):
-  # arguments with the iterator in the proper location
-  if isinstance(star_wrap, int):
+    def wrap_func(func):
+      def func_out(to_unpack):
+        return func(*to_unpack)
+      return func_out
+
+  elif double_star_wrap is not None:
+    wrap_val = double_star_wrap
+
+    def wrap_func(func):
+      def func_out(to_unpack):
+        return func(**to_unpack)
+      return func_out
+
+  else:
+    wrap_val = None
+
+  if isinstance(wrap_val, int):
     # this could be functionalized
-    to_star = args[star_wrap] if star_wrap < iter_index else args[star_wrap - 1]
-    star_function = (star_arguments(to_star)
+    to_star = args[wrap_val] if wrap_val < iter_index else args[wrap_val - 1]
+    star_function = (wrap_func(to_star)
                      if len(signature(to_star).parameters) > 1
                      else to_star)
 
-    split_index = star_wrap if star_wrap < iter_index else star_wrap - 1
+    split_index = wrap_val if wrap_val < iter_index else wrap_val - 1
     args = args[:split_index] + (star_function,) + args[split_index + 1:]
 
-  elif isinstance(star_wrap, str):
-    if star_wrap in kargs.keys():
+  elif isinstance(wrap_val, str):
+    if wrap_val in kargs.keys():
       kargs = ChainMap(
-          {star_wrap: star_arguments(kargs[star_wrap])},
+          {wrap_val: wrap_func(kargs[wrap_val])},
           kargs
         )
 
-  elif star_wrap is not None:
+  elif wrap_val is not None:
     raise TypeError(
-        'star_wrap must be of type int or str, but is type ' + str(type(star_wrap))
+        'wrap_val must be of type int or str, but not type ' + str(type(wrap_val))
       )
-
 
   args = args[:iter_index] + (function_pipe,) + args[iter_index:]
 
   return args, kargs
-
-
-def _create_wrapper(gener, iter_index, is_valve, empty_error, star_wrap):
-  '''
-  Creates a wrapped generator that can be added to the class Pipe.
-  The wrapper always puts the iterable in the correct location in the gener's arguments.
-
-  gener - generator to be wrapped
-  iter_index - the index of the arguments to pass the iterable
-  is_valve - should be true if the gener is
-  '''
-  if is_valve:
-    def wrapper(self, *args, **kargs):
-
-      args, kargs = _assemble_args(
-          function_pipe = self.function_pipe,
-          iter_index = iter_index,
-          args = args,
-          kargs = kargs,
-          star_wrap = star_wrap,
-        )
-
-      if self.preloaded:
-        '''
-        If the Pipe is preloaded with data and a valve is added the Pipe will run the
-        pre loaded iterator and return the value.
-        '''
-        to_return = gener(*args, **kargs)
-
-      else:
-        to_return = Pipe(
-            iterable_pre_load = self.preloaded,
-            function_pipe = Valve(
-                func = gener,
-                pass_args = args,
-                pass_kargs = kargs,
-                empty_error = empty_error,
-              ),
-            reservoir = self.reservoir,
-            valve = True,
-          )
-
-      return to_return
-
-  else:
-    def wrapper(self, *args, **kargs):
-      args, kargs = _assemble_args(
-                function_pipe = self.function_pipe,
-                iter_index = iter_index,
-                args = args,
-                kargs = kargs,
-                star_wrap = star_wrap,
-              )
-
-      return Pipe(
-          iterable_pre_load = self.preloaded,
-          function_pipe = gener(*args, **kargs),
-          reservoir = self.reservoir,
-          valve = False,
-        )
-
-  return wrapper
 
 
 class Reservoir:
