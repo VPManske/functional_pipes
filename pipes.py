@@ -2,8 +2,6 @@ from functools import partial
 from collections import ChainMap
 from inspect import signature
 
-from support import Reservoir, Valve
-
 
 class Pipe:
   def __init__(self, iterable_pre_load=None, function_pipe=None, reservoir=None, valve=False):
@@ -212,4 +210,110 @@ def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_sta
   return args, kargs
 
 
+class Reservoir:
+  '''
+  Single threaded iterator that gives a handle to the beginning of the function pipe.
+  '''
 
+  def __init__(self, iterable=None):
+    '''
+    iterable - preloads the instance with values to return when __next__ is called
+    '''
+    self.iterator = iter(iterable) if iterable else None
+
+  def __call__(self, iterable):
+    '''
+    Reloads the instance with values.
+    Checks if self is empty and raises an error if not empty.
+
+    iterable - must be iterable
+    '''
+    if self.iterator:
+      raise ValueError('{} is not empty.'.format(self))
+    self.iterator = iter(iterable)
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    '''
+    Returns a value as long as there are loaded values.
+    If there are no loaded values StopIteration is raised.
+    '''
+    try:
+      return next(self.iterator)
+    except StopIteration as err:
+      self.iterator = None
+      raise err
+    except TypeError:
+      raise StopIteration('Reservoir is empty.')
+
+
+class Valve:
+  '''
+  Transforms functions that accept iterators and returns a value into a generator.
+  This allow functions that are not generators to be passed into a pipe.
+
+  IMPROVEMENT:
+  __next__ has a lot of dynamic checks if this could be doen in __init__ it would
+    help the pipeline performance.
+
+  Example with sorted:
+    >>> valve_2 = Valve(func=sorted, pass_args=(data_1,)e)
+    >>> next(valve_2)
+    1
+    >>> next(valve_2)
+    2
+    >>> next(valve_2)
+    3
+    >>> next(valve_2)
+    raises StopIteration
+
+  Example with max:
+    >>> data_1 = 2, 1, 3
+    >>> valve_1 = Valve(func=test_function, pass_args=(data_1,))
+    >>> result_1 = next(valve_1)
+    3
+    >>> result_1 = next(valve_1)
+    raises StopIteration
+  '''
+
+  def __init__(self, func, pass_args, pass_kargs=None, empty_error=None):
+    '''
+    func - A function that should consume the whole iterable and return an object.
+      If the returned object is iterable, Valve will pass one value of the object iterator
+      at a time.
+
+    pass_args - Arguments that will be unloaded into func with the * operator like *pass_args
+    pass_kargs - Keyed arguments that will be unloaded into func with the ** operator like **pass_kargs
+
+    empty_error - error that is thrown if func recieves an empty iterator
+    '''
+    self.func = func
+    self.pass_args = pass_args
+    self.pass_kargs = pass_kargs if pass_kargs else {}
+    self.empty_error = empty_error
+
+    self.iterator = iter(())
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    try:
+      to_return = next(self.iterator)
+    except StopIteration:
+      try:
+        from_func = self.func(*self.pass_args, **self.pass_kargs)
+      except self.empty_error:
+        raise StopIteration
+
+      try:
+        # self.func(*self.pass_args, **self.pass_kargs) may not return an iterator
+        self.iterator = iter(from_func)
+        to_return = next(self.iterator)
+      except TypeError:
+        # create iterator from non iterator
+        to_return = from_func
+
+    return to_return
