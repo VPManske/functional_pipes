@@ -1,7 +1,33 @@
 import unittest
 from itertools import zip_longest
 
-from pipe_multi import Confluence
+from pipe_multi import PipeMulti, Confluence
+
+
+class TestPipeMulti(unittest.TestCase):
+  def test_init_iter_call_next(self):
+    '''
+    test __inti__, __iter__, __call__, __next__.
+    No extra methods added.
+    '''
+    data_1 = 1, 2, 3
+    data_2 = 2, 3, 4
+    data_3 = 6, 4, 2
+
+    pm_1 = PipeMulti()
+
+    handle_1 = pm_1(data_1)
+    handle_2 = pm_1(data_2)
+
+    handle_3 = pm_1()
+    handle_3(data_3)
+
+    for h1, d1, h2, d2, h3, d3 in zip(
+          handle_1, data_1, handle_2, data_2, handle_3, data_3
+        ):
+      self.assertEqual(h1, d1)
+      self.assertEqual(h2, d2)
+      self.assertEqual(h3, d3)
 
 
 class TestConfluence(unittest.TestCase):
@@ -50,14 +76,6 @@ class TestConfluence(unittest.TestCase):
       pass
 
     handle_1(data_1)
-
-
-
-
-
-
-
-
 
 
 

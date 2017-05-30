@@ -25,9 +25,9 @@ class TestPipe(unittest.TestCase):
       if hasattr(Pipe, attr):
         delattr(Pipe, attr)
 
-  def test_call_iter_next(self):
+  def test_init_iter_call_next(self):
     '''
-    test iter, next, call.
+    test __inti__, __iter__, __call__, __next__.
     No extra methods added.
     '''
     data_1 = 1, 2, 3, 4
