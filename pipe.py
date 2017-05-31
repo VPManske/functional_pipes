@@ -2,13 +2,13 @@ from functools import partial
 from collections import ChainMap
 from inspect import signature
 
-from more_itertools import peekable
+from more_itertools import peekable, consume
 
 
 class Pipe:
   def __init__(self, iterable_pre_load=None, function_pipe=None, reservoir=None, valve=False):
     # True if an iterable is data is preloaded into the pipe
-    self.preloaded = bool(iterable_pre_load)
+    self.preloaded = True if iterable_pre_load is not None else None
 
     # Iterable source for the Pipe
     self.reservoir = reservoir if reservoir else Reservoir(iterable_pre_load)
@@ -113,6 +113,7 @@ class Pipe:
               iterable_pre_load = self.preloaded,
               function_pipe = Valve(
                   func = gener,
+                  iterator = self.function_pipe,
                   pass_args = args,
                   pass_kargs = kargs,
                   empty_error = empty_error,
@@ -140,8 +141,6 @@ class Pipe:
             reservoir = self.reservoir,
             valve = False,
           )
-
-
 
     # sets the wrapped function as a method in Pipe
     setattr(cls, gener_name, wrapper)
@@ -290,44 +289,50 @@ class Valve:
     raises StopIteration
   '''
 
-  def __init__(self, func, pass_args, pass_kargs=None, empty_error=None):
+  def __init__(self, func, iterator, pass_args, pass_kargs=None, empty_error=None):
     '''
     func - A function that should consume the whole iterable and return an object.
       If the returned object is iterable, Valve will pass one value of the object iterator
       at a time.
+
+    iterator - the iterator that is also contained in pass_args or pass_kargs.
+      it is here so that it can be completely consumed if func does not completely
+      consume it
 
     pass_args - Arguments that will be unloaded into func with the * operator like *pass_args
     pass_kargs - Keyed arguments that will be unloaded into func with the ** operator like **pass_kargs
 
     empty_error - error that is thrown if func recieves an empty iterator
 
-    Important Note: I the iterable that is passed in with pass_args or pass_kargs
+    Important Note: The iterable that is passed in with pass_args or pass_kargs
       can be replenished with the function iter the values returnd by that iterable
       will continue to be passed in an infinate loop.
     '''
     self.func = func
+    self.iterator = iterator
     self.pass_args = pass_args
     self.pass_kargs = pass_kargs if pass_kargs else {}
     self.empty_error = empty_error
 
-    self.iterator = iter(())
+    self.post_iterator = iter(())
 
   def __iter__(self):
     return self
 
   def __next__(self):
     try:
-      to_return = next(self.iterator)
+      to_return = next(self.post_iterator)
     except StopIteration:
       try:
         from_func = self.func(*self.pass_args, **self.pass_kargs)
+        consume(self.iterator)
       except self.empty_error:
         raise StopIteration
 
       try:
         # self.func(*self.pass_args, **self.pass_kargs) may not return an iterator
-        self.iterator = iter(from_func)
-        to_return = next(self.iterator)
+        self.post_iterator = iter(from_func)
+        to_return = next(self.post_iterator)
       except TypeError:
         # create iterator from non iterator
         to_return = from_func

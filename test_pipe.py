@@ -32,6 +32,7 @@ class TestPipe(unittest.TestCase):
     '''
     data_1 = 1, 2, 3, 4
     data_2 = 5, 6, 7, 8
+    data_3 = ()
 
     pipe_1 = Pipe()
     pipe_1(data_1)
@@ -292,6 +293,7 @@ class TestPipe(unittest.TestCase):
   def test_pipe_valve(self):
     data_1 = 4, 2, 8, -5
     data_1_min = min(data_1)
+    data_2 = ()
 
     # test method that directly passes the data through
     Pipe.add_map_method(lambda val: val, 'pass_through')
@@ -341,6 +343,10 @@ class TestPipe(unittest.TestCase):
         pip_4(data_1)
       )
 
+    # empty preloaded iterator
+    with self.assertRaises(ValueError):
+      Pipe(data_2).min()
+
 
 class TestValve(unittest.TestCase):
   def test_iterable_object(self):
@@ -355,22 +361,25 @@ class TestValve(unittest.TestCase):
 
     # test reuse with Reservoir
     resv_3 = Reservoir(data_1)
-    valve_3 = Valve(func=test_function, pass_args=(resv_3,))
+    valve_3 = Valve(func=test_function, iterator=resv_3, pass_args=(resv_3,))
     self.assertTrue(list(valve_3), sorted(data_1))
     with self.assertRaises(StopIteration):
       next(valve_3)
     resv_3(data_2)
     self.assertTrue(next(valve_3), sorted(data_2))
 
-    valve_4 = Valve(func=test_function, pass_args=(iter(data_1),))
+    iter_4 = iter(data_1)
+    valve_4 = Valve(func=test_function, iterator=iter_4, pass_args=(iter_4,))
     self.assertIs(next(valve_4), sorted(data_1)[0])
     for f, d in zip_longest(valve_4, sorted(data_1)[1:]):
       self.assertIs(f, d)
 
     # pass in a karg with pass_kargs
+    iter_5 =iter(data_1)
     valve_5 = Valve(
         func = test_function,
-        pass_args = (iter(data_1),),
+        iterator = iter_5,
+        pass_args = (iter_5,),
         pass_kargs = dict(reverse=True),
       )
     self.assertEqual(list(valve_5), sorted(data_1, reverse=True))
@@ -389,9 +398,11 @@ class TestValve(unittest.TestCase):
     data_2 = 5, 2, 6, 7, 2, 4, 6
     max_2 = test_function(data_2)
 
+    iter_1 = iter(data_1)
     valve_1 = Valve(
         func = test_function,
-        pass_args = (iter(data_1),),
+        iterator = iter_1,
+        pass_args = (iter_1,),
         empty_error = ValueError,
       )
     result_1 = next(valve_1)
@@ -401,12 +412,35 @@ class TestValve(unittest.TestCase):
 
     # test with reservoir
     resr_2 = Reservoir(data_1)
-    valve_2 = Valve(func=test_function, pass_args=(resr_2,), empty_error=ValueError)
+    valve_2 = Valve(
+        func=test_function,
+        iterator=resr_2,
+        pass_args=(resr_2,),
+        empty_error=ValueError
+      )
     self.assertIs(next(valve_2), max_1)
     with self.assertRaises(StopIteration):
       next(valve_2)
     resr_2(data_2)
     self.assertIs(next(valve_2), max_2)
+
+  def test_empty_iter(self):
+    '''
+    The iterator that the valve has should be completely consumed when the
+    function valve applies to it is complete.
+    '''
+    data_1 = 2, 1, 3
+
+    iter_1 = iter(data_1)
+    valve_1 = Valve(
+        func = next,
+        iterator = iter_1,
+        pass_args = (iter_1,),
+        empty_error = StopIteration,
+      )
+    next(valve_1)
+    with self.assertRaises(StopIteration):
+      next(valve_1)
 
 
 class TestReservoir(unittest.TestCase):

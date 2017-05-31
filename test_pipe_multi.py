@@ -22,7 +22,7 @@ class TestPipeMulti(unittest.TestCase):
     handle_3 = pm_1()
     handle_3(data_3)
 
-    for h1, d1, h2, d2, h3, d3 in zip(
+    for h1, d1, h2, d2, h3, d3 in zip_longest(
           handle_1, data_1, handle_2, data_2, handle_3, data_3
         ):
       self.assertEqual(h1, d1)

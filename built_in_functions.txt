@@ -1,0 +1,104 @@
+gener
+is_valve
+iter_index
+gener_name
+no_over_write
+empty_error
+
+methods_to_add = (
+should return everything from the iterator or mapping into the data type
+class dict(iterable, **kwarg)
+class frozenset([iterable])
+list([iterable])
+reversed(seq)
+set([iterable])
+sorted(iterable[, key][, reverse])
+str(object='') # should have the special name
+str(object=b'', encoding='utf-8', errors='strict')
+sum(iterable[, start])
+tuple([iterable])
+
+valve functions
+all(iterable)
+any(iterable)
+max(iterable, *[, key, default])
+min(iterable, *[, key, default])
+
+non valve functions
+enumerate(iterable, start=0)
+filter(function, iterable)
+map(function, iterable, ...)
+zip(*iterables) # should zip in external values. A custom zip internal should be added
+  )
+
+maps_to_add = (
+has a counterpart that does the iterator while this should do by element
+class dict(**kwarg)
+class frozenset([iterable])
+list([iterable])
+max(iterable, *[, key, default])
+min(iterable, *[, key, default])
+reversed(seq)
+set([iterable])
+sorted(iterable[, key][, reverse])
+str(object='')
+str(object=b'', encoding='utf-8', errors='strict')
+sum(iterable[, start])
+tuple([iterable])
+
+abs(x)
+ascii(object)
+bin(x)
+bool([x])
+callable(object)
+chr(i)
+classmethod(function)
+complex([real[, imag]])
+divmod(a, b)
+eval(expression, globals=None, locals=None)
+float([x])
+format(value[, format_spec])
+getattr(object, name[, default])
+hasattr(object, name)
+hash(object)
+hex(x)
+id(object)
+int(x, base=10)
+isinstance(object, classinfo)
+issubclass(class, classinfo)
+iter(object[, sentinel])
+len(s)
+memoryview(obj)
+oct(x)
+open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None)
+ord(c)
+pow(x, y[, z])
+property(fget=None, fset=None, fdel=None, doc=None)
+range(stop)
+range(start, stop[, step])
+repr(object)
+round(number[, ndigits])
+slice(stop)
+slice(start, stop[, step])
+staticmethod(function)
+super([type[, object-or-type]])
+type(object)
+type(name, bases, dict)
+vars([object])
+  )
+
+not_added = (
+bytearray([source[, encoding[, errors]]])
+bytes([source[, encoding[, errors]]])
+compile(source, filename, mode, flags=0, dont_inherit=False, optimize=-1)
+delattr(object, name)
+dir([object])
+exec(object[, globals[, locals]])
+globals()
+help([object])
+input([prompt])
+locals()
+next(iterator[, default])
+print(*objects, sep=' ', end='\n', file=sys.stdout, flush=False)
+setattr(object, name, value)
+  )
