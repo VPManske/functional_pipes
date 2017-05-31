@@ -291,11 +291,23 @@ class TestPipe(unittest.TestCase):
 
   def test_add_map_method(self):
     data_1 = 1, 2, 7, 9
-    data_1_squared = tuple(d**2 for d in data_1)
 
     Pipe.add_map_method(lambda a: a**2, 'square')
 
-    self.assertEqual(tuple(Pipe(data_1).square()), data_1_squared)
+    self.assertEqual(
+        tuple(Pipe(data_1).square()),
+        tuple(d**2 for d in data_1)
+      )
+
+  def test_add_key_map_method(self):
+    data_1 = 1, 2, 7, 9
+
+    Pipe.add_key_map_method(lambda a: a**2, 'square')
+
+    self.assertEqual(
+        tuple(Pipe(data_1).square()),
+        tuple((d, d**2) for d in data_1)
+      )
 
   def test_pipe_valve(self):
     data_1 = 4, 2, 8, -5

@@ -156,10 +156,37 @@ class Pipe:
 
     func - must be a function.
       if a lambda function func_name must be a string for the method name.
+    func_name - the Pipe method name
+      defaults to the func.__name__ string if not defined
+    no_over_write - If True an AttributeError will be raised if there is already a method with
+      the gener_name or gener.__name__. If False any method will be overwritten.
     '''
     cls.add_method(
         gener = partial(map, func),
         gener_name = func_name if func_name else func.__name__,
+        no_over_write = no_over_write,
+      )
+
+  @classmethod
+  def add_key_map_method(cls, func, func_name=None, no_over_write=True):
+    '''
+    Similar to Pipe.add_map_method but returns a key and the function output
+    instead of just mapping the function value.
+
+    Example:
+    >>> Pipe('1', '2').int_key().tuple()
+    (('1', 1), ('2', 2))
+
+    func - must be a function.
+      if a lambda function func_name must be a string for the method name.
+    func_name - the Pipe method name
+      defaults to the func.__name__ string if not defined
+    no_over_write - If True an AttributeError will be raised if there is already a method with
+      the gener_name or gener.__name__. If False any method will be overwritten.
+    '''
+    cls.add_map_method(
+        func = lambda val: (val, func(val)),
+        func_name = func_name,
         no_over_write = no_over_write,
       )
 
