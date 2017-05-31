@@ -235,6 +235,7 @@ class TestPipe(unittest.TestCase):
     '''
     data_1 = (1, 2), (3, 4), (5, 6)
     data_2 = 4, 2, 8, -5
+    data_3 = 5, 6, 3, 6, 2
 
     Pipe.add_method(
         gener = min,
@@ -246,8 +247,14 @@ class TestPipe(unittest.TestCase):
         (5, 6)
       )
     self.assertEqual(
-        Pipe(data_2 ).min(),
+        Pipe(data_2).min(),
         -5
+      )
+
+    # test function that shouldn't be starred
+    self.assertEqual(
+        Pipe(data_3).min(key=lambda a: 1 / a),
+        max(data_3)
       )
 
   def test_add_method_double_star_int(self):

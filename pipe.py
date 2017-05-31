@@ -106,6 +106,9 @@ class Pipe:
           If the Pipe is preloaded with data and a valve is added the Pipe will run the
           pre loaded iterator and return the value.
           '''
+          if kargs:
+            def un_star(**kargs):
+              return kargs
           to_return = gener(*args, **kargs)
 
         else:
@@ -169,17 +172,17 @@ def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_sta
     wrap_val = star_wrap
 
     def wrap_func(func):
-      def func_out(to_unpack):
+      def func_out_single_star(to_unpack):
         return func(*to_unpack)
-      return func_out
+      return func_out_single_star
 
   elif double_star_wrap is not None:
     wrap_val = double_star_wrap
 
     def wrap_func(func):
-      def func_out(to_unpack):
+      def func_out_double_star(to_unpack):
         return func(**to_unpack)
-      return func_out
+      return func_out_double_star
 
   else:
     wrap_val = None
@@ -196,8 +199,13 @@ def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_sta
 
   elif isinstance(wrap_val, str):
     if wrap_val in kargs.keys():
+      to_star = kargs[wrap_val]
+      star_function = (wrap_func(to_star)
+                     if len(signature(to_star).parameters) > 1
+                     else to_star)
+
       kargs = ChainMap(
-          {wrap_val: wrap_func(kargs[wrap_val])},
+          {wrap_val: star_function},
           kargs
         )
 
