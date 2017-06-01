@@ -154,4 +154,11 @@ Pipe.**repr_keyed**()
 Pipe.**round_keyed**()  
 Pipe.**type_keyed**()  
 
+## About This Repo
+I decided to write this package because I wanted to have more functional programming concepts in python.  
+This is still a work in progress that I would like to continue to improve. If you have comments, suggestions, or bugs please create an issue.  
+
+## Coming Soon
+I would like to add the functionality from itertools and [more-itertools](https://github.com/erikrose/more-itertools) to this along with some custom functions that I think would be useful.
+
 ✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
