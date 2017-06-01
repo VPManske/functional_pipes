@@ -1,6 +1,12 @@
 # functional_pipes
 Functional transformation pipelines.
 
+## Install
+```shell
+pip install git+https://github.com/BebeSparkelSparkel/functional_pipes@master
+```
+
+## Example usage:
 ```python
 >>> from functional_pipes import Pipe, built_in_functions
 >>> 
