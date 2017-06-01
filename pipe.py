@@ -22,7 +22,7 @@ class Pipe:
   def __call__(self, iterable):
     self.reservoir(iterable)
     if self.valve:
-      return next(self.function_pipe)
+      return self.function_pipe.whole_return()
 
     return self
 
@@ -106,9 +106,6 @@ class Pipe:
           If the Pipe is preloaded with data and a valve is added the Pipe will run the
           pre loaded iterator and return the value.
           '''
-          if kargs:
-            def un_star(**kargs):
-              return kargs
           to_return = gener(*args, **kargs)
 
         else:
@@ -365,7 +362,6 @@ class Valve:
         raise StopIteration
 
       try:
-        # self.func(*self.pass_args, **self.pass_kargs) may not return an iterator
         self.post_iterator = iter(from_func)
         to_return = next(self.post_iterator)
       except TypeError:
@@ -373,3 +369,14 @@ class Valve:
         to_return = from_func
 
     return to_return
+
+  def whole_return(self):
+    '''
+    Returns the object created by the function and iterable.
+    Used inplace of __next__ if the returned object should not be converted to an
+    iterable.
+    '''
+    from_func = self.func(*self.pass_args, **self.pass_kargs)
+    consume(self.iterator)
+    return from_func
+

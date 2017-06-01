@@ -10,34 +10,87 @@ Pipe.add_map_method(lambda val: val, 'same')
 class TestMethods(unittest.TestCase):
   def test_dict(self):
     data_1 = ('a', 1), ('b', 2), ('c', 3)
+    data_2 = (1, 2), (3, 4), (5, 6)
 
     self.assertEqual(
         Pipe(data_1).dict(),
         dict(data_1)
       )
 
+    pipe_1 = Pipe().dict()
+    pipe_1(())
+
+    self.assertEqual(
+        pipe_1(data_2),
+        dict(data_2)
+      )
+
   def test_frozenset(self):
     data_1 = 1, 2, 2, 3
+    data_2 = (1, 2), (3, 4), (5, 6)
 
     self.assertEqual(
         Pipe(data_1).frozenset(),
         frozenset(data_1)
       )
 
+    pipe_1 = Pipe().frozenset()
+    pipe_1(())
+
+    self.assertEqual(
+        pipe_1(data_2),
+        frozenset(data_2)
+      )
+
   def test_set(self):
     data_1 = 1, 2, 2, 3, 879, 48, 2
+    data_2 = (1, 2), (3, 4), (5, 6)
 
     self.assertEqual(
         Pipe(data_1).set(),
         set(data_1)
       )
 
+    pipe_1 = Pipe().set()
+    pipe_1(())
+
+    self.assertEqual(
+        pipe_1(data_2),
+        set(data_2)
+      )
+
+  def test_list(self):
+    data_1 = 1, 2, 2, 3, 879, 48, 2
+    data_2 = (1, 2), (3, 4), (5, 6)
+
+    self.assertEqual(
+        Pipe(data_1).list(),
+        list(data_1)
+      )
+
+    pipe_1 = Pipe().list()
+    pipe_1(())
+
+    self.assertEqual(
+        pipe_1(data_2),
+        list(data_2)
+      )
+
   def test_tuple(self):
     data_1 = 1, 2, 2, 3, 879, 48, 2
+    data_2 = (1, 2), (3, 4), (5, 6)
 
     self.assertEqual(
         Pipe(data_1).tuple(),
         tuple(data_1)
+      )
+
+    pipe_1 = Pipe().tuple()
+    pipe_1(())
+
+    self.assertEqual(
+        pipe_1(data_2),
+        tuple(data_2)
       )
 
   def test_all(self):
@@ -861,6 +914,22 @@ class TestKeyMapMethods(unittest.TestCase):
         Pipe(data_1).type_keyed().tuple(),
         tuple((d, type(d)) for d in data_1)
       )
+
+
+class TestCombinations(unittest.TestCase):
+  def test_filter_list(self):
+    data_1 = ()
+    data_2 = (1, 2), (3, 4), (5, 6)
+
+    reuse_1 = Pipe().list()
+    reuse_1(data_1)
+
+    reuse2 = Pipe(
+      ).map(lambda a, b: (2 * a, b, a * b)
+      ).filter(lambda a2, b, ab: a2 < ab and a2 < b
+      ).list()
+
+    reuse2(data_2)
 
 
 if __name__ == '__main__':

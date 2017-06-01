@@ -7,6 +7,7 @@ methods_to_add = (
     dict(gener=dict, is_valve=True),
     dict(gener=frozenset, is_valve=True),
     dict(gener=set, is_valve=True),
+    dict(gener=list, is_valve=True),
     dict(gener=tuple, is_valve=True),
 
     # non iterable valves

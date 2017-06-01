@@ -18,7 +18,8 @@ class TestPipe(unittest.TestCase):
         'min',
         'square',
         'pass_through',
-        'min'
+        'min',
+        'list',
       )
 
     for attr in to_del:
@@ -309,7 +310,7 @@ class TestPipe(unittest.TestCase):
         tuple((d, d**2) for d in data_1)
       )
 
-  def test_pipe_valve(self):
+  def test_pipe_valve_non_iterable(self):
     data_1 = 4, 2, 8, -5
     data_1_min = min(data_1)
     data_2 = ()
@@ -366,6 +367,24 @@ class TestPipe(unittest.TestCase):
     with self.assertRaises(ValueError):
       Pipe(data_2).min()
 
+  def test_pipe_valve_iterable(self):
+    data_1 = [(1, 2), (3, 4), (5, 6)]
+
+    Pipe.add_method(gener=list, is_valve=True)
+
+    self.assertEqual(
+        Pipe(data_1).list(),
+        list(data_1)
+      )
+
+    pipe_1 = Pipe().list()
+
+    self.assertEqual(
+        pipe_1(data_1),
+        list(data_1)
+      )
+
+
 
 class TestValve(unittest.TestCase):
   def test_iterable_object(self):
@@ -381,7 +400,10 @@ class TestValve(unittest.TestCase):
     # test reuse with Reservoir
     resv_3 = Reservoir(data_1)
     valve_3 = Valve(func=test_function, iterator=resv_3, pass_args=(resv_3,))
-    self.assertTrue(list(valve_3), sorted(data_1))
+    self.assertEqual(
+        list(d for d, i in zip(valve_3, range(10))),
+        sorted(data_1)
+      )
     with self.assertRaises(StopIteration):
       next(valve_3)
     resv_3(data_2)
@@ -394,7 +416,7 @@ class TestValve(unittest.TestCase):
       self.assertIs(f, d)
 
     # pass in a karg with pass_kargs
-    iter_5 =iter(data_1)
+    iter_5 = iter(data_1)
     valve_5 = Valve(
         func = test_function,
         iterator = iter_5,
@@ -460,6 +482,14 @@ class TestValve(unittest.TestCase):
     next(valve_1)
     with self.assertRaises(StopIteration):
       next(valve_1)
+
+  def test_whole_return(self):
+    data_1 = 1, 2, 3, 4
+    iter_1 = iter(data_1)
+
+    valve_1 = Valve(list, iter_1, (iter_1,))
+
+    self.assertEqual(valve_1.whole_return(), list(data_1))
 
 
 class TestReservoir(unittest.TestCase):
