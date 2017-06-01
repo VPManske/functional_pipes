@@ -7,6 +7,7 @@ Functional transformation pipelines.
 ```shell
 pip install git+https://github.com/BebeSparkelSparkel/functional_pipes@master
 ```
+Will add to pypi if people show interest in this.
 
 ## Example usage:
 ```python
