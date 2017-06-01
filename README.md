@@ -1,5 +1,5 @@
 # functional_pipes
-Functional transformation pipelines.
+Functional transformation pipelines.  
 ✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
 ![](https://github.com/BebeSparkelSparkel/functional_pipes/blob/master/water-pipes-flowing1.jpg?raw=true)
 
