@@ -1,5 +1,7 @@
 # functional_pipes
 Functional transformation pipelines.
+✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
+![](https://github.com/BebeSparkelSparkel/functional_pipes/blob/master/water-pipes-flowing1.jpg?raw=true)
 
 ## Install
 ```shell
@@ -151,3 +153,4 @@ Pipe.**repr_keyed**()
 Pipe.**round_keyed**()  
 Pipe.**type_keyed**()  
 
+✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
