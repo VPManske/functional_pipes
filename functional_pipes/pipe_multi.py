@@ -1,4 +1,4 @@
-from pipe import Pipe, Reservoir
+from functional_pipes.pipe import Pipe, Reservoir
 
 
 class PipeMulti(Pipe):

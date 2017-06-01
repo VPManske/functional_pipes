@@ -1,5 +1,4 @@
-from pipe import Pipe
-import built_in_functions
+from functional_pipes import Pipe, built_in_functions
 
 data_1 = 1, -2, 3, -4, 5
 

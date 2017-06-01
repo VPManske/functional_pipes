@@ -2,7 +2,7 @@ import unittest, types
 from itertools import zip_longest
 
 
-from pipe import Pipe, Reservoir, Valve
+from functional_pipes.pipe import Pipe, Reservoir, Valve
 
 
 class TestPipe(unittest.TestCase):

@@ -1,6 +1,6 @@
 from collections import ChainMap
 
-import pipe
+import functional_pipes as fp
 
 methods_to_add = (
     # collection
@@ -33,7 +33,7 @@ methods_to_add = (
   )
 
 for method_properties in methods_to_add:
-  pipe.Pipe.add_method(**method_properties)
+  fp.Pipe.add_method(**method_properties)
 
 
 map_methods_to_add = (
@@ -87,20 +87,20 @@ map_methods_to_add = (
 
 for func_properties in map_methods_to_add:
   if isinstance(func_properties, dict):
-    pipe.Pipe.add_map_method(**func_properties)
+    fp.Pipe.add_map_method(**func_properties)
   else:
-    pipe.Pipe.add_map_method(func_properties)
+    fp.Pipe.add_map_method(func_properties)
 
 # key map methods
 for func_properties in map_methods_to_add:
   if isinstance(func_properties, dict):
-    pipe.Pipe.add_key_map_method(**ChainMap(
+    fp.Pipe.add_key_map_method(**ChainMap(
         dict(func_name=func_properties['func_name'] + '_keyed'),
         func_properties
       ))
 
   else:
-    pipe.Pipe.add_key_map_method(
+    fp.Pipe.add_key_map_method(
         func = func_properties,
         func_name = func_properties.__name__ + '_keyed',
       )

@@ -1,7 +1,7 @@
 import unittest
 from itertools import zip_longest
 
-from pipe_multi import PipeMulti, Confluence
+from functional_pipes.pipe_multi import PipeMulti, Confluence
 
 
 class TestPipeMulti(unittest.TestCase):
