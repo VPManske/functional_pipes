@@ -3,9 +3,6 @@ import unittest, io
 from functional_pipes import Pipe, custom_pipes
 
 
-Pipe.add_map_method(lambda val: val, 'same')
-
-
 class TestMethods(unittest.TestCase):
   def test_zip_internal(self):
     data_1 = (1, 2, 3), (4, 5, 6), (7, 8, 9)

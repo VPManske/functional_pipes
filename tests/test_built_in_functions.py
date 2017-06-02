@@ -4,10 +4,19 @@ from functional_pipes.pipe import Pipe
 import functional_pipes.built_in_functions
 
 
-Pipe.add_map_method(lambda val: val, 'same')
+
 
 
 class TestMethods(unittest.TestCase):
+  def tearDown(self):
+    to_del = (
+        'same',
+      )
+
+    for attr in to_del:
+      if hasattr(Pipe, attr):
+        delattr(Pipe, attr)
+
   def test_dict(self):
     data_1 = ('a', 1), ('b', 2), ('c', 3)
     data_2 = (1, 2), (3, 4), (5, 6)
@@ -107,6 +116,7 @@ class TestMethods(unittest.TestCase):
     self.assertFalse(pipe_1(data_2))
 
     # causes an error. reported with: https://github.com/BebeSparkelSparkel/functional_pipes/issues/2
+    # Pipe.add_map_method(lambda val: val, 'same')
     # pipe_2 = pipe_1.same()
     # self.assertEqual(
     #     tuple(val for val, c in zip(pipe_2(iter(data_1)), range(2))),
@@ -131,6 +141,7 @@ class TestMethods(unittest.TestCase):
     self.assertFalse(pipe_1(data_2))
 
     # causes an error. reported with: https://github.com/BebeSparkelSparkel/functional_pipes/issues/2
+    # Pipe.add_map_method(lambda val: val, 'same')
     # pipe_2 = pipe_1.same()
     # self.assertEqual(
     #     tuple(val for val, c in zip(pipe_2(iter(data_1)), range(2))),

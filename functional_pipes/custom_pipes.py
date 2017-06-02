@@ -1,5 +1,5 @@
 import functional_pipes as fp
-wrap_gener = fp.wrap_gener
+from functional_pipes.wrap_gener import wrap_gener
 
 # define functions
 def zip_internal(iterable):
