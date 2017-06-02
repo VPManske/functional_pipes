@@ -151,3 +151,39 @@ Pipe.**repr_keyed**()
 Pipe.**round_keyed**()  
 Pipe.**type_keyed**()  
 
+## Custom Pipes
+### Import
+To import the built in functions methods run code below. This will add the methods defined in built_in_functions.py to the Pipe class.  
+```python
+from functional_pipes import Pipe, custom_pipes
+```
+
+Pipe.**zip_internal**()  
+Zips all objects from iterable together.  
+
+Example:  
+```python
+>>> data_1 = (1, 2, 3), (4, 5, 6), (7, 8, 9)
+>>> Pipe(data_1).zip_internal().tuple()
+((1, 4, 7), (2, 5, 8), (3, 6, 9))
+```
+
+Pipe.**dict_zip**()  
+Yields a dictionary with the same keys that dict_w_iter has.  
+The values are all of the same index from the iterator from the values from dict_w_iter.  
+
+Example:  
+```python
+>>> data_dict = dict(
+...    a = (1,2,3),
+...    b = (4,5,6),
+...  )
+...
+>>> for row in dict_zip(data_dict):
+...  print(row)
+...
+{'a': 1, 'b': 4}
+{'a': 2, 'b': 5}
+{'a': 3, 'b': 6}
+```
+
