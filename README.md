@@ -1,10 +1,13 @@
 # functional_pipes
-Functional transformation pipelines.
+Functional transformation pipelines.  
+✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
+![](https://github.com/BebeSparkelSparkel/functional_pipes/blob/master/water-pipes-flowing1.jpg?raw=true)
 
 ## Install
 ```shell
 pip install git+https://github.com/BebeSparkelSparkel/functional_pipes@master
 ```
+Will add to pypi if people show interest in this.
 
 ## Example usage:
 ```python
@@ -187,3 +190,11 @@ Example:
 {'a': 3, 'b': 6}
 ```
 
+## About This Repo
+I decided to write this package because I wanted to have more functional programming concepts in python.  
+This is still a work in progress that I would like to continue to improve. If you have comments, suggestions, or bugs please create an issue.  
+
+## Coming Soon
+I would like to add the functionality from itertools and [more-itertools](https://github.com/erikrose/more-itertools) to this along with some custom functions that I think would be useful.
+
+✮✮✮✮✮✮✮✮✮✮✮✮ LIKE IT? STAR IT! ✮✮✮✮✮✮✮✮✮✮✮✮  
