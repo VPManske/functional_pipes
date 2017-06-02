@@ -22,6 +22,7 @@ class TestMethods(unittest.TestCase):
         tuple(pipe_1(data_1)),
         data_1_zipped
       )
+    self.assertEqual(tuple(pipe_1(data_1)), data_1_zipped) # reload the pipe
 
     self.assertEqual(
         tuple(Pipe(data_2).zip_internal()),
@@ -47,6 +48,7 @@ class TestMethods(unittest.TestCase):
         tuple(pipe_1(2 * data_1)),
         2 * data_1_dz
       )
+    self.assertEqual(tuple(pipe_1(data_1)), data_1_dz) # reload the pipe
 
 
 if __name__ == '__main__':

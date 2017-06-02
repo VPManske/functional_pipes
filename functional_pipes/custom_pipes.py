@@ -1,6 +1,34 @@
 import functional_pipes as fp
 
 
+def super_gener(function):
+  class wrapper_class:
+    def __init__(self, iterable):
+      self.iterable = iterable
+      self.zipped = None
+
+    def __iter__(self):
+      return self
+
+    def __next__(self):
+      try:
+        out = next(self.zipped)
+        print('check 1    ', out)
+        return out
+
+      except TypeError:
+        print('check 2')
+        self.zipped = function(self.iterable)
+        return next(self)
+
+      except StopIteration as err:
+        print('check 3')
+        self.zipped = None
+        raise err
+
+  return wrapper_class
+
+
 # define functions
 def zip_internal(iterable):
   '''
@@ -12,6 +40,7 @@ def zip_internal(iterable):
   ((1, 4, 7), (2, 5, 8), (3, 6, 9))
   '''
   for zipped in zip(*iterable):
+    print('zipped',   zipped)
     yield zipped
 
 
@@ -43,7 +72,7 @@ def dict_zip(iterable):
 
 # profile methods to add
 methods_to_add = (
-    zip_internal,
+    dict(gener=super_gener(zip_internal), gener_name='zip_internal', is_valve=True),
     dict_zip,
   )
 

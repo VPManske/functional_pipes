@@ -19,6 +19,9 @@ class Pipe:
     # True if the end of the pipe is a valve function else False
     self.valve = valve
 
+    # allows functions to vary the inputs like carry_key
+    self.extra_wrapper = None
+
   def __call__(self, iterable):
     self.reservoir(iterable)
     if self.valve:
@@ -186,6 +189,12 @@ class Pipe:
         func_name = func_name,
         no_over_write = no_over_write,
       )
+
+  # @property
+  # def carry_key(self):
+  #   def carry_key(iterable):
+  #     for 
+  #   self.extra_wrapper = 
 
 
 def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
