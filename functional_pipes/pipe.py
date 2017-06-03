@@ -1,12 +1,18 @@
 from functools import partial
-from collections import ChainMap
+from collections import ChainMap, deque
 from inspect import signature
 
 from more_itertools import peekable, consume
 
 
 class Pipe:
-  def __init__(self, iterable_pre_load=None, function_pipe=None, reservoir=None, valve=False):
+  def __init__(self,
+        iterable_pre_load = None,
+        function_pipe = None,
+        reservoir = None,
+        valve = False,
+        enclosing_pipe = None,
+      ):
     # True if an iterable is data is preloaded into the pipe
     self.preloaded = True if iterable_pre_load is not None else None
 
@@ -19,8 +25,8 @@ class Pipe:
     # True if the end of the pipe is a valve function else False
     self.valve = valve
 
-    # allows functions to vary the inputs like carry_key
-    self.extra_wrapper = None
+    # the pipe that wraps this pipe and should be retruned when the wrap is over
+    self.enclosing_pipe = enclosing_pipe
 
   def __call__(self, iterable):
     self.reservoir(iterable)
@@ -123,6 +129,7 @@ class Pipe:
                 ),
               reservoir = self.reservoir,
               valve = True,
+              enclosing_pipe = self.enclosing_pipe,
             )
 
         return to_return
@@ -143,6 +150,7 @@ class Pipe:
             function_pipe = gener(*args, **kargs),
             reservoir = self.reservoir,
             valve = False,
+            enclosing_pipe = self.enclosing_pipe,
           )
 
     # sets the wrapped function as a method in Pipe
@@ -190,11 +198,39 @@ class Pipe:
         no_over_write = no_over_write,
       )
 
-  # @property
-  # def carry_key(self):
-  #   def carry_key(iterable):
-  #     for 
-  #   self.extra_wrapper = 
+  @property
+  def carry_key(self):
+    '''
+    Must be a method function that returns a value.
+    Example:
+    >>> data = (1, 2), (3, 4)
+    >>> Pipe(data
+    >>>   ).carry_key.map(lambda b: 2 * b
+    >>>   ).re_key.tuple()
+    ((1, 4), (3, 8))
+    '''
+    return Pipe(
+        reservoir = Drip(),
+        enclosing_pipe = self,
+      )
+
+  @property
+  def re_key(self):
+    enclosing_pipe = self.enclosing_pipe
+
+    bpp = Bypass(
+        bypass = self,
+        iterable = enclosing_pipe,
+        drip_handle = self.reservoir,
+        start = lambda key_val: (key_val[0], key_val[1]),
+        end = lambda key, bypass_val: (key, bypass_val),
+      )
+
+    return Pipe(
+        iterable_pre_load = enclosing_pipe.preloaded,
+        function_pipe = bpp,
+        reservoir = enclosing_pipe.reservoir,
+      )
 
 
 def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
@@ -277,9 +313,6 @@ class Reservoir:
 
     self.iterator = peekable(iterable)
 
-  def __iter__(self):
-    return self
-
   def __next__(self):
     '''
     Returns a value as long as there are loaded values.
@@ -293,12 +326,68 @@ class Reservoir:
     except TypeError:
       raise StopIteration('Reservoir is empty.')
 
+  def __iter__(self):
+    return self
+
 
 class ReservoirEmpty:
   '''
   Class to return if the peekable iterator is empty in Reservoir.__call__
   '''
   pass
+
+
+class Drip(Exception):
+  def __init__(self):
+    self.to_drip = _drip_empty
+
+  def __call__(self, next_drip):
+    self.to_drip = next_drip
+
+  def __next__(self):
+    if self.to_drip is not _drip_empty:
+      to_return = self.to_drip
+      self.to_drip = _drip_empty
+      return to_return
+
+    raise Drip
+
+  def __iter__(self):
+    return self
+
+class _drip_empty:
+  pass
+
+
+class Bypass:
+  def __init__(self, bypass, iterable, drip_handle, split_obj, merge_objs):
+    self.bypass = bypass
+    self.iterable = iter(iterable)
+    self.drip_handle = drip_handle
+    self.split_obj = split_obj
+    self.merge_objs = merge_objs
+
+  def __next__(self):
+    for next_obj in self.iterable:
+      print('for')
+      store, pass_on = self.split_obj(next_obj)
+      self.drip_handle(pass_on)
+
+      try:
+        bypass_value = next(self.bypass)
+      except Drip:
+        print('Drip')
+        continue
+
+      print('return')
+      return self.merge_objs(store, bypass_value)
+
+    print('StopIteration')
+    raise StopIteration
+
+  def __iter__(self):
+    return self
+
 
 
 class Valve:
