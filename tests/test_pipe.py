@@ -399,16 +399,16 @@ class TestPipe(unittest.TestCase):
 
     pipe_1 = Pipe(
       ).carry_key.map(lambda b: 2 * b
-      ).re_key.tuple()
-    self.assertEqual(pipe_1(data_1), result_1)
-    self.assertEqual(pipe_1(data_1), result_1)  # not a repeat
+      ).re_key
+    self.assertEqual(tuple(pipe_1(data_1)), result_1)
+    self.assertEqual(tuple(pipe_1(data_1)), result_1)  # not a repeat
 
   def test_carry_key_shrink(self):
     Pipe.add_method(gener=filter, iter_index=1)
 
     data_1 = (1, 2), (3, 4), (5, 6)
-    filter_1 = lambda val: val != 8
-    result_1 = (1, 4), (5, 12)
+    filter_1 = lambda val: val != 4
+    result_1 = (1, 2), (5, 6)
 
     self.assertEqual(
         tuple(Pipe(data_1).carry_key.filter(filter_1).re_key),
@@ -416,22 +416,15 @@ class TestPipe(unittest.TestCase):
       )
 
   def test_carry_key_expand(self):
-    class expand:
-      def __init__(self):
-        self.range = range(2)
-      def __next_(self):
-        return next(self.range)
-
-    Pipe.add_method(expand)
+    Pipe.add_method(Expand)
 
     data_1 = (1, 2), (3, 4), (5, 6)
-    result_1 = (1, 4), (5, 12)
+    result_1 = (1, 0), (1, 1), (3, 0), (3, 1), (5, 0), (5, 1)
 
     self.assertEqual(
-        tuple(Pipe(data_1).carry_key.expand().re_key),
+        tuple(Pipe(data_1).carry_key.Expand().re_key),
         result_1
       )
-
 
 
 class TestValve(unittest.TestCase):
@@ -734,8 +727,7 @@ class TestBypass(unittest.TestCase):
     def re_key(key, bypass_val):
       return key, bypass_val
 
-
-    bpp = Bypass(
+    bpp_1 = Bypass(
         bypass = Expand(drip_1),
         iterable = data_1,
         drip_handle = drip_1,
@@ -743,10 +735,20 @@ class TestBypass(unittest.TestCase):
         merge_objs = re_key,
       )
 
-    self.assertEqual(
-        tuple(bpp),
-        result_1
+    self.assertEqual(tuple(bpp_1), result_1)
+
+    # empty data
+    data_2 = ()
+    drip_2 = Drip()
+    bpp_2 = Bypass(
+        bypass = Expand(drip_2),
+        iterable = data_2,
+        drip_handle = drip_2,
+        split_obj = carry_key,
+        merge_objs = re_key,
       )
+
+    self.assertEqual(tuple(bpp_2), ())
 
 
 
