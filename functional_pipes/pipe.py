@@ -4,7 +4,7 @@ from inspect import signature
 
 from more_itertools import peekable, consume
 
-from functional_pipes.bypasses import Bypass, Drip, add_bypasses
+from functional_pipes.bypass import Bypass, Drip, add_bypasses
 
 
 class Pipe:
@@ -56,6 +56,9 @@ class Pipe:
         double_star_wrap = None,
       ):
     '''
+    Used to add methods to the Pipe class.
+    Returns the new method name.
+
     gener - generator to be added
 
     iter_index - index of the iterator argument for gener
@@ -158,6 +161,8 @@ class Pipe:
     # sets the wrapped function as a method in Pipe
     setattr(cls, gener_name, wrapper)
 
+    return gener_name
+
   @classmethod
   def add_map_method(cls, func, func_name=None, no_over_write=True):
     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
@@ -173,7 +178,7 @@ class Pipe:
     no_over_write - If True an AttributeError will be raised if there is already a method with
       the gener_name or gener.__name__. If False any method will be overwritten.
     '''
-    cls.add_method(
+    return cls.add_method(
         gener = partial(map, func),
         gener_name = func_name if func_name else func.__name__,
         no_over_write = no_over_write,
@@ -198,7 +203,7 @@ class Pipe:
     no_over_write - If True an AttributeError will be raised if there is already a method with
       the gener_name or gener.__name__. If False any method will be overwritten.
     '''
-    cls.add_map_method(
+    return cls.add_map_method(
         func = lambda val: (val, func(val)),
         func_name = func_name,
         no_over_write = no_over_write,

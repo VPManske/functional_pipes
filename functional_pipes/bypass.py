@@ -5,6 +5,12 @@ bypass_definitions = (
         split = lambda key_val: (key_val[0], key_val[1]),
         merge = lambda key, bypass_val: (key, bypass_val),
       ),
+    dict(
+        open_name = 'carry_value',
+        close_name = 're_value',
+        split = lambda key_val: (key_val[1], key_val[0]),
+        merge = lambda val, bypass_key: (bypass_key, val),
+      ),
   )
 
 def add_bypasses(pipe_class):

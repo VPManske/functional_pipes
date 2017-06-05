@@ -1,19 +1,16 @@
 import unittest, io
 
 from functional_pipes.pipe import Pipe
-import functional_pipes.built_in_functions
+from functional_pipes.built_in_functions import method_names
 
 
 
 
 
 class TestMethods(unittest.TestCase):
-  def tearDown(self):
-    to_del = (
-        'same',
-      )
-
-    for attr in to_del:
+  @classmethod
+  def tearDownClass(self):
+    for attr in method_names:
       if hasattr(Pipe, attr):
         delattr(Pipe, attr)
 

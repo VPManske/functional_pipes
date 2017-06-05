@@ -2,6 +2,10 @@ from collections import ChainMap
 
 import functional_pipes as fp
 
+
+method_names = [] # holds all the method names that were added to Pipe
+
+
 methods_to_add = (
     # collection
     dict(gener=dict, is_valve=True),
@@ -33,7 +37,8 @@ methods_to_add = (
   )
 
 for method_properties in methods_to_add:
-  fp.Pipe.add_method(**method_properties)
+  name = fp.Pipe.add_method(**method_properties)
+  method_names.append(name)
 
 
 map_methods_to_add = (
@@ -87,22 +92,25 @@ map_methods_to_add = (
 
 for func_properties in map_methods_to_add:
   if isinstance(func_properties, dict):
-    fp.Pipe.add_map_method(**func_properties)
+    name = fp.Pipe.add_map_method(**func_properties)
   else:
-    fp.Pipe.add_map_method(func_properties)
+    name = fp.Pipe.add_map_method(func_properties)
+
+  method_names.append(name)
 
 # key map methods
 for func_properties in map_methods_to_add:
   if isinstance(func_properties, dict):
-    fp.Pipe.add_key_map_method(**ChainMap(
+    name = fp.Pipe.add_key_map_method(**ChainMap(
         dict(func_name=func_properties['func_name'] + '_keyed'),
         func_properties
       ))
-
   else:
-    fp.Pipe.add_key_map_method(
+    name = fp.Pipe.add_key_map_method(
         func = func_properties,
         func_name = func_properties.__name__ + '_keyed',
       )
+
+  method_names.append(name)
 
 # func, func_name=None, no_over_write=True

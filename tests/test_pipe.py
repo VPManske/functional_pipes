@@ -387,46 +387,6 @@ class TestPipe(unittest.TestCase):
         list(data_1)
       )
 
-  def test_carry_key_no_size_change(self):
-    Pipe.add_method(gener=map, iter_index=1)
-
-    data_1 = (1, 2), (3, 4), (5, 6)
-    result_1 = (1, 4), (3, 8), (5, 12)
-
-    self.assertEqual(
-        tuple(Pipe(data_1).carry_key.map(lambda b: 2 * b).re_key),
-        result_1
-      )
-
-    pipe_1 = Pipe(
-      ).carry_key.map(lambda b: 2 * b
-      ).re_key
-    self.assertEqual(tuple(pipe_1(data_1)), result_1)
-    self.assertEqual(tuple(pipe_1(data_1)), result_1)  # not a repeat
-
-  def test_carry_key_shrink(self):
-    Pipe.add_method(gener=filter, iter_index=1)
-
-    data_1 = (1, 2), (3, 4), (5, 6)
-    filter_1 = lambda val: val != 4
-    result_1 = (1, 2), (5, 6)
-
-    self.assertEqual(
-        tuple(Pipe(data_1).carry_key.filter(filter_1).re_key),
-        result_1
-      )
-
-  def test_carry_key_expand(self):
-    Pipe.add_method(Expand)
-
-    data_1 = (1, 2), (3, 4), (5, 6)
-    result_1 = (1, 0), (1, 1), (3, 0), (3, 1), (5, 0), (5, 1)
-
-    self.assertEqual(
-        tuple(Pipe(data_1).carry_key.Expand().re_key),
-        result_1
-      )
-
 
 class TestValve(unittest.TestCase):
   def test_iterable_object(self):
