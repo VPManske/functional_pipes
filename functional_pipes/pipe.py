@@ -4,6 +4,8 @@ from inspect import signature
 
 from more_itertools import peekable, consume
 
+from functional_pipes.bypasses import Bypass, Drip, add_bypasses
+
 
 class Pipe:
   def __init__(self,
@@ -158,6 +160,8 @@ class Pipe:
 
   @classmethod
   def add_map_method(cls, func, func_name=None, no_over_write=True):
+    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+
     '''
     Similar to Pipe.add_method but takes a function not a generator.
     The function becomes the mapping function.
@@ -177,6 +181,8 @@ class Pipe:
 
   @classmethod
   def add_key_map_method(cls, func, func_name=None, no_over_write=True):
+    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/6
+
     '''
     Similar to Pipe.add_map_method but returns a key and the function output
     instead of just mapping the function value.
@@ -198,42 +204,83 @@ class Pipe:
         no_over_write = no_over_write,
       )
 
-  @property
-  def carry_key(self):
+  def open_bypass(self):
     '''
-    Must be a method function that returns a value.
-    Example:
-    >>> data = (1, 2), (3, 4)
-    >>> Pipe(data
-    >>>   ).carry_key.map(lambda b: 2 * b
-    >>>   ).re_key.tuple()
-    ((1, 4), (3, 8))
+    Opens a bypass Pipe that will take part of the output from the previous
+    pipe section.
+    Used multiple times by Pipe.add_bypass but assigned as a property with
+    different names to show its relationship with its related closing bypass
+    property method.
     '''
     return Pipe(
         reservoir = Drip(),
         enclosing_pipe = self,
       )
 
-  @property
-  def re_key(self):
-    enclosing_pipe = self.enclosing_pipe
+  @classmethod
+  def add_bypass(cls, open_name, close_name, split, merge):
+    '''
+    Allows new bypass operations to be created that operates on part of the data
+    created by the previous pipe segment.
 
-    bpp = Bypass(
-        bypass = self,
-        iterable = enclosing_pipe,
-        drip_handle = self.reservoir,
-        split_obj = lambda key_val: (key_val[0], key_val[1]),
-        merge_objs = lambda key, bypass_val: (key, bypass_val),
-      )
+    Example:
+    Pipe.carry_key and Pipe.re_key are good examples of this. carry_key is a
+    property method that just calls open_bypass and re_key is its paired method
+    that will rekey the bypass pipe.
+    >>> Pipe([(1, 2), (3, 4), (5, 6)]
+    >>>   ).carry_key.map(lambda b: 2 * b  # map now only gets index 1 of the tuple elements
+    >>>   ).filter(lambda b: b < 10  # filter also only gets the map modified (times 2) index 1 of the tuple elements
+    >>>   ).re_key.list()  # re_key now merges the modified and filtered values back together and passes them to list
+    [(1, 4), (3, 8)]
+    '''
+    setattr(cls, open_name, property(cls.open_bypass))  # bypass opener
 
-    return Pipe(
-        iterable_pre_load = enclosing_pipe.preloaded,
-        function_pipe = bpp,
-        reservoir = enclosing_pipe.reservoir,
-      )
+    def close_bypass(self):
+      enclosing_pipe = self.enclosing_pipe
+
+      bpp = Bypass(
+          bypass = self,
+          iterable = enclosing_pipe,
+          drip_handle = self.reservoir,
+          split = split,
+          merge = merge,
+        )
+
+      return Pipe(
+          iterable_pre_load = enclosing_pipe.preloaded,
+          function_pipe = bpp,
+          reservoir = enclosing_pipe.reservoir,
+        )
+
+    setattr(cls, close_name, property(close_bypass))
+
+
+'''
+Addes all the bypasses defined in bypass.py
+'''
+add_bypasses(Pipe)
 
 
 def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
+  '''
+  Process all the arguments to pass into a function that is a method of Pipe.
+
+  iter_index - the index of the iterator argument to be passed into the function.
+    ars will be split and function_pipe will be inserted in between the splits
+    and re-combined
+
+  args - the indexed arguments that are to be pass into the function with the * operator
+
+  kargs - the kargs that are to be passed into the functions with the ** operator
+
+  star_wrap - a int, str, or None that specifies the argument that should be wrapped
+    with the star operator.
+    If an int then the argument in args at index star_wrap will be wrapped.
+    If a str then the argument in kargs at key will be wrapped.
+    If None then no arguments are wrapped.
+
+  double_star_wrap - is the same as star_wrap but applies the ** operator
+  '''
   if star_wrap is not None and double_star_wrap is not None:
     raise ValueError('star_wrap and double_star_wrap cannot both not be None.')
 
@@ -337,106 +384,6 @@ class ReservoirEmpty:
   pass
 
 
-class Drip(Exception):
-  '''
-  An iterator that only allows one object out at a time before throwing an exception.
-  Initially empty.
-  Call with an object to return when next is called on it.
-  After first next is called the second next will raise a Drip exception.
-  Used by the Bypass class to control flow into the bypass pipe.
-  '''
-  def __init__(self):
-    self.to_drip = _drip_empty
-
-  def __call__(self, next_drip):
-    '''
-    Sets the next vale to be returned by next.
-    '''
-    self.to_drip = next_drip
-
-  def __next__(self):
-    '''
-    Returns value passed in by call once and then raises Drip excpetion.
-    '''
-    if self.to_drip is not _drip_empty:
-      to_return = self.to_drip
-      self.to_drip = _drip_empty
-      return to_return
-
-    raise Drip
-
-  def __iter__(self):
-    return self
-
-class _drip_empty:
-  '''
-  Exclusive use in Drip class for indicating if it is empty or not.
-  '''
-  pass
-
-
-class Bypass:
-  '''
-  Use to carry values around a pipe segment that and reconnect them.
-
-  The self.store object will be merged the object that is put through the bypass.
-
-  If the bypass iterator creates more values than is put into it the self.store
-  object that caome from split_obj will be given to each of the values.
-
-  If the bypass iterator does not return a value for the input then the self.store
-  object is dropped and the next object from iterable is put into the bypass.
-  '''
-  def __init__(self, bypass, iterable, drip_handle, split_obj, merge_objs):
-    '''
-    bypass - Inteded to be a Pipe but it can be any iterator that initally iterates
-      over drip_handle.
-    iterable - Intended to be a Pipe but it can be any iterator that's output will
-      be run through split_obj.
-    drip_handle - Needs to be an instance of the Drip class that is the root
-      iterator of the bypass argument.
-    split_obj - function that returns a tuple that splits the object from the
-      iterable argument and returns a tuple of length two. The zero index will be
-      the value that is carried around the bypass and passed into the merge_objs
-      function as the first argument. The one index will be passed into the bypass
-      to be modified.
-    merge_objs - function that takes in two arguments and returns a single object.
-      The first argument comes from the zero index output from split_obj and the
-      second argument is the value returned from the bypass.
-    '''
-    self.bypass = bypass
-    self.iterable = iter(iterable)
-    self.drip_handle = drip_handle
-    self.split_obj = split_obj
-    self.merge_objs = merge_objs
-
-    self.store = None
-
-  def __next__(self):
-    try:
-      to_return = self.merge_objs(self.store, next(self.bypass))
-
-    except Drip:
-      for next_obj in self.iterable:
-        self.store, pass_on = self.split_obj(next_obj)
-        self.drip_handle(pass_on)
-
-        try:
-          to_return = self.merge_objs(self.store, next(self.bypass))
-          break
-        except Drip:
-          continue
-
-      else:
-        raise StopIteration
-
-    return to_return
-
-  def __iter__(self):
-    return self
-
-
-
 class Valve:
   '''
   Transforms functions that accept iterators and returns a value into a generator.
@@ -524,4 +471,3 @@ class Valve:
     from_func = self.func(*self.pass_args, **self.pass_kargs)
     consume(self.iterator)
     return from_func
-
