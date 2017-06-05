@@ -13,7 +13,7 @@ class Pipe:
         function_pipe = None,
         reservoir = None,
         valve = False,
-        enclosing_pipe = None,
+        enclosing_pipe = None,  # pipe that encloses the bypass pipe
       ):
     # True if an iterable is data is preloaded into the pipe
     self.preloaded = True if iterable_pre_load is not None else None
@@ -178,8 +178,16 @@ class Pipe:
     no_over_write - If True an AttributeError will be raised if there is already a method with
       the gener_name or gener.__name__. If False any method will be overwritten.
     '''
+    def map_method_wrap(*args, **kargs):
+      '''
+      Allows methods to be passed to the function that map will call.
+      '''
+      iterator = args[0]
+      args = args[1:]
+      return map(lambda iter_obj: func(iter_obj, *args, **kargs), iterator)
+
     return cls.add_method(
-        gener = partial(map, func),
+        gener = map_method_wrap,
         gener_name = func_name if func_name else func.__name__,
         no_over_write = no_over_write,
       )

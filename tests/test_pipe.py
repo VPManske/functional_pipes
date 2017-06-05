@@ -303,6 +303,13 @@ class TestPipe(unittest.TestCase):
         tuple(d**2 for d in data_1)
       )
 
+    # method call includes a value
+    Pipe.add_map_method(min)
+    self.assertEqual(
+        tuple(Pipe(data_1).min(5, key=lambda a: 1 / a)),
+        (5, 5, 7, 9)
+      )
+
   def test_add_key_map_method(self):
     data_1 = 1, 2, 7, 9
 
