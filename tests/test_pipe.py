@@ -295,6 +295,7 @@ class TestPipe(unittest.TestCase):
 
   def test_add_map_method(self):
     data_1 = 1, 2, 7, 9
+    data_2 = (1, 2), (3, 4)
 
     Pipe.add_map_method(lambda a: a**2, 'square')
 
@@ -308,6 +309,16 @@ class TestPipe(unittest.TestCase):
     self.assertEqual(
         tuple(Pipe(data_1).min(5, key=lambda a: 1 / a)),
         (5, 5, 7, 9)
+      )
+
+    self.assertEqual(
+        tuple(Pipe(data_2).min()),
+        (1, 3)
+      )
+
+    self.assertEqual(
+        tuple(Pipe(data_2).min(key=lambda a: 1 / a)),
+        (2, 4)
       )
 
   def test_add_key_map_method(self):
