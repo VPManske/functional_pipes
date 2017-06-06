@@ -43,7 +43,7 @@ def zip_to_dict(iterable):
   '''
   stored = tuple((key, iter(value)) for key, value in iterable)
 
-  while True:
+  while stored:
     try:
       yield {key: next(iter_val) for key, iter_val in stored}
     except StopIteration:

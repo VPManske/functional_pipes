@@ -1,7 +1,7 @@
 import unittest, io
 from itertools import chain
 
-from functional_pipes import Pipe, built_in_functions, custom_pipes
+from functional_pipes import Pipe, built_in_functions, custom_pipes, testing_tools
 
 
 class TestMethods(unittest.TestCase):
@@ -9,12 +9,14 @@ class TestMethods(unittest.TestCase):
   def setUpClass(self):
     built_in_functions.add_class_methods(Pipe)
     custom_pipes.add_class_methods(Pipe)
+    testing_tools.add_class_methods(Pipe)
 
   @classmethod
   def tearDownClass(self):
     method_names = chain(*(package.method_names for package in (
         built_in_functions,
         custom_pipes,
+        testing_tools,
       )))
 
     for name in method_names:
@@ -55,6 +57,10 @@ class TestMethods(unittest.TestCase):
         Pipe(data_1).zip_to_dict().tuple(),
         result_1
       )
+
+    pipe_1 = Pipe().zip_to_dict().limit_size(2).tuple()
+    self.assertEqual(pipe_1(data_1), result_1)
+
 
 
 if __name__ == '__main__':
