@@ -22,6 +22,7 @@ class TestPipe(unittest.TestCase):
         'list',
         'expand',
         'map',
+        'add',
       )
 
     for attr in to_del:
@@ -296,6 +297,7 @@ class TestPipe(unittest.TestCase):
   def test_add_map_method(self):
     data_1 = 1, 2, 7, 9
     data_2 = (1, 2), (3, 4)
+    data_3 = dict(a=1, b=2), dict(a=3, b=4)
 
     Pipe.add_map_method(lambda a: a**2, 'square')
 
@@ -320,6 +322,23 @@ class TestPipe(unittest.TestCase):
         tuple(Pipe(data_2).min(key=lambda a: 1 / a)),
         (2, 4)
       )
+
+    # single star
+    Pipe.add_map_method(lambda a, b: a + b, 'add', star_wrap=True)
+
+    self.assertEqual(
+        tuple(Pipe(data_2).add()),
+        (3, 7)
+      )
+
+    # double star
+    Pipe.add_map_method(lambda a, b: a + b, 'add', double_star_wrap=True, no_over_write=False)
+
+    self.assertEqual(
+        tuple(Pipe(data_3).add()),
+        (3, 7)
+      )
+
 
   def test_add_key_map_method(self):
     data_1 = 1, 2, 7, 9

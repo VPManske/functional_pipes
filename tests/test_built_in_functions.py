@@ -1,18 +1,18 @@
 import unittest, io
 
-from functional_pipes.pipe import Pipe
-from functional_pipes.built_in_functions import method_names
-
-
-
+from functional_pipes import Pipe
+from functional_pipes.built_in_functions import add_class_methods, method_names
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
+  def setUpClass(cls):
+    add_class_methods(Pipe)
+
+  @classmethod
   def tearDownClass(self):
-    for attr in method_names:
-      if hasattr(Pipe, attr):
-        delattr(Pipe, attr)
+    for name in method_names:
+      delattr(Pipe, name)
 
   def test_dict(self):
     data_1 = ('a', 1), ('b', 2), ('c', 3)
@@ -29,6 +29,15 @@ class TestMethods(unittest.TestCase):
     self.assertEqual(
         pipe_1(data_2),
         dict(data_2)
+      )
+
+    # with carry_key
+    carry_key_pipe = Pipe(
+      ).carry_key.map(lambda val: 2 * val
+      ).re_key.dict()
+    self.assertEqual(
+        carry_key_pipe(data_1),
+        dict(a=2, b=4, c=6)
       )
 
   def test_frozenset(self):
@@ -331,6 +340,15 @@ class TestMethods(unittest.TestCase):
 
 
 class TestMapMethods(unittest.TestCase):
+  @classmethod
+  def setUpClass(cls):
+    add_class_methods(Pipe)
+
+  @classmethod
+  def tearDownClass(self):
+    for name in method_names:
+      delattr(Pipe, name)
+
   def test_dict_e(self):
     data_1 = (('a', 1), ('b', 2)), (('c', 2), ('d', 3))
 
@@ -623,6 +641,15 @@ class TestMapMethods(unittest.TestCase):
       )
 
 class TestKeyMapMethods(unittest.TestCase):
+  @classmethod
+  def setUpClass(cls):
+    add_class_methods(Pipe)
+
+  @classmethod
+  def tearDownClass(self):
+    for name in method_names:
+      delattr(Pipe, name)
+
   def test_dict_e_keyed(self):
     data_1 = (('a', 1), ('b', 2)), (('c', 2), ('d', 3))
 
@@ -922,22 +949,6 @@ class TestKeyMapMethods(unittest.TestCase):
         Pipe(data_1).type_keyed().tuple(),
         tuple((d, type(d)) for d in data_1)
       )
-
-
-class TestCombinations(unittest.TestCase):
-  def test_filter_list(self):
-    data_1 = ()
-    data_2 = (1, 2), (3, 4), (5, 6)
-
-    reuse_1 = Pipe().list()
-    reuse_1(data_1)
-
-    reuse2 = Pipe(
-      ).map(lambda a, b: (2 * a, b, a * b)
-      ).filter(lambda a2, b, ab: a2 < ab and a2 < b
-      ).list()
-
-    reuse2(data_2)
 
 
 if __name__ == '__main__':

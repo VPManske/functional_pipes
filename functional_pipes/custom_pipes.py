@@ -1,5 +1,20 @@
-import functional_pipes as fp
 from functional_pipes.wrap_gener import wrap_gener
+
+
+def add_class_methods(pipe_class):
+  # methods
+  for method_properties in methods_to_add:
+    if isinstance(method_properties, dict):
+      name = pipe_class.add_method(**method_properties)
+
+    else:
+      name = pipe_class.add_method(method_properties)
+
+    method_names.add(name)
+
+
+method_names = set() # holds all the method names that were added to Pipe
+
 
 # define functions
 def zip_internal(iterable):
@@ -15,41 +30,29 @@ def zip_internal(iterable):
     yield zipped
 
 
-def dict_zip(iterable):
+def zip_to_dict(iterable):
   '''
-  Yields a dictionary with the same keys that dict_w_iter has.
-  The values are all of the same index from the iterator from the
-  values from dict_w_iter.
+  yields a dict with keys and the corrisponding next value
+
+  iterable - (key, value) tuple pairs. value must be iterable
 
   Example:
-  >>> data_dict = dict(
-  ...    a = (1,2,3),
-  ...    b = (4,5,6),
-  ...  )
-  ...
-  >>> for row in dict_zip(data_dict):
-  ...  print(row)
-  ...
-  {'a': 1, 'b': 4}
-  {'a': 2, 'b': 5}
-  {'a': 3, 'b': 6}
+  >>> data = ('a', (1, 2)), ('b', (3, 4))
+  >>> Pipe(data).zip_to_dict().tuple()
+  ({'a': 1, 'b': 3}, {'a': 2, 'b': 4})
   '''
-  for dict_w_iter in iterable:
-    lables = dict_w_iter.keys()
-    matrix = tuple(dict_w_iter[k] for k in lables)
-    for row in zip(*matrix):
-      yield dict(zip(lables, row))
+  stored = tuple((key, iter(value)) for key, value in iterable)
+
+  while True:
+    try:
+      yield {key: next(iter_val) for key, iter_val in stored}
+    except StopIteration:
+      break
 
 
 # profile methods to add
 methods_to_add = (
     wrap_gener(zip_internal),
-    wrap_gener(dict_zip),
+    wrap_gener(zip_to_dict),
   )
-
-for method_properties in methods_to_add:
-  if isinstance(method_properties, dict):
-    fp.Pipe.add_method(**method_properties)
-  else:
-    fp.Pipe.add_method(method_properties)
 

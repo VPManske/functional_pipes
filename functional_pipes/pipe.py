@@ -164,7 +164,13 @@ class Pipe:
     return gener_name
 
   @classmethod
-  def add_map_method(cls, func, func_name=None, no_over_write=True):
+  def add_map_method(cls,
+        func,
+        func_name = None,
+        no_over_write = True,
+        star_wrap = False,
+        double_star_wrap = False
+      ):
     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
 
     '''
@@ -177,6 +183,10 @@ class Pipe:
       defaults to the func.__name__ string if not defined
     no_over_write - If True an AttributeError will be raised if there is already a method with
       the gener_name or gener.__name__. If False any method will be overwritten.
+    star_wrap - If True objects from the pipe will have will be unpacked with a
+      single star when passed into func
+    double_star_wrap - If true objects from the pipe will have will be unpacked
+      with a double star when passed into func
     '''
     def map_method_wrap(*args, **kargs):
       '''
@@ -184,7 +194,17 @@ class Pipe:
       '''
       iterator = args[0]
       args = args[1:]
-      return map(lambda iter_obj: func(iter_obj, *args, **kargs), iterator)
+
+      if star_wrap:
+        wrapper = lambda iter_obj: func(*iter_obj, *args, **kargs)
+      elif double_star_wrap:
+        wrapper = lambda iter_obj: func(*args, **iter_obj, **kargs)
+      elif args or kargs:
+        wrapper = lambda iter_obj: func(iter_obj, *args, **kargs)
+      else:
+        wrapper = func
+
+      return map(wrapper, iterator)
 
     return cls.add_method(
         gener = map_method_wrap,
