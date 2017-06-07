@@ -23,6 +23,7 @@ class TestPipe(unittest.TestCase):
         'expand',
         'map',
         'add',
+        'tuple',
       )
 
     for attr in to_del:
@@ -405,7 +406,7 @@ class TestPipe(unittest.TestCase):
 
     # empty preloaded iterator
     with self.assertRaises(ValueError):
-      Pipe(data_2).min()
+      print(Pipe(data_2).min())
 
   def test_pipe_valve_iterable(self):
     data_1 = [(1, 2), (3, 4), (5, 6)]
@@ -423,6 +424,27 @@ class TestPipe(unittest.TestCase):
         pipe_1(data_1),
         list(data_1)
       )
+
+  # def test_preloading_existing_pipe(self):
+  #   '''
+  #   https://github.com/BebeSparkelSparkel/functional_pipes/issues/9
+
+  #   Give a created pipe data and then add aditional segments to it and a
+  #   closing valve. After the valve is added it should execute and return
+  #   the result.
+  #   '''
+  #   Pipe.add_method(gener=tuple, is_valve=True)
+
+  #   data_1 = 1, 2, 3
+  #   pipe_1 = Pipe()
+
+  #   self.assertEqual(
+  #       pipe_1(data_1).tuple(),
+  #       data_1
+  #     )
+
+
+
 
 
 class TestValve(unittest.TestCase):
@@ -592,6 +614,27 @@ class TestReservoir(unittest.TestCase):
     for i in range(len(data_2)):
       next(res_1)
     res_1(data_1)
+
+  def test_not_empty(self):
+    data_1 = 1, 2
+    data_2 = ()
+
+    res_1 = Reservoir(data_1)
+    self.assertTrue(res_1.not_empty())
+
+    # tuple(zip(data_1, res_1))
+    tuple(res_1)
+    self.assertFalse(res_1.not_empty())
+
+    res_1(data_1)
+    self.assertTrue(res_1.not_empty())
+
+    res_2 = Reservoir()
+    self.assertFalse(res_2.not_empty())
+
+    res_2(data_1)
+    self.assertTrue(res_2.not_empty())
+
 
 
 

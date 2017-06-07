@@ -5,6 +5,8 @@ from inspect import signature
 from more_itertools import peekable, consume
 
 from functional_pipes.bypass import Bypass, Drip, add_bypasses
+from functional_pipes.more_collections import dotdict
+
 
 
 class Pipe:
@@ -13,9 +15,11 @@ class Pipe:
         function_pipe = None,
         reservoir = None,
         valve = False,
-        enclosing_pipe = None,  # pipe that encloses the bypass pipe
+        enclosing_pipe = None,
+        bypass_properties = None
       ):
     # True if an iterable is data is preloaded into the pipe
+    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/9
     self.preloaded = True if iterable_pre_load is not None else None
 
     # Iterable source for the Pipe
@@ -29,6 +33,14 @@ class Pipe:
 
     # the pipe that wraps this pipe and should be retruned when the wrap is over
     self.enclosing_pipe = enclosing_pipe
+
+    '''
+    If this is a bypass Pipe, self.bypass_properties holds information about how
+    to merge the bypass back into the main pipe.
+    '''
+    self.bypass_properties = bypass_properties
+
+    assert (not enclosing_pipe and not bypass_properties) or (enclosing_pipe and bypass_properties)
 
   def __call__(self, iterable):
     self.reservoir(iterable)
@@ -135,6 +147,7 @@ class Pipe:
               reservoir = self.reservoir,
               valve = True,
               enclosing_pipe = self.enclosing_pipe,
+              bypass_properties = self.bypass_properties,
             )
 
         return to_return
@@ -156,6 +169,7 @@ class Pipe:
             reservoir = self.reservoir,
             valve = False,
             enclosing_pipe = self.enclosing_pipe,
+            bypass_properties = self.bypass_properties,
           )
 
     # sets the wrapped function as a method in Pipe
@@ -237,24 +251,31 @@ class Pipe:
         no_over_write = no_over_write,
       )
 
-  def open_bypass(self):
-    '''
-    Opens a bypass Pipe that will take part of the output from the previous
-    pipe section.
-    Used multiple times by Pipe.add_bypass but assigned as a property with
-    different names to show its relationship with its related closing bypass
-    property method.
-    '''
-    return Pipe(
-        reservoir = Drip(),
-        enclosing_pipe = self,
-      )
-
   @classmethod
-  def add_bypass(cls, open_name, close_name, split, merge):
+  def add_bypass(cls,
+        open_name,
+        close_name,
+        split = None,
+        merge = None,
+        open_bypass = None,
+        close_bypass = None,
+      ):
     '''
     Allows new bypass operations to be created that operates on part of the data
     created by the previous pipe segment.
+
+    open_name - method name to open bypass
+    close_name - method name to close bypass
+    split - function to split the passed objects into two parts.
+      (bypass object, pass into bypass pipe)
+    merge - function that takes two arguments (bypass object, object from bypass pipe)
+      and returns single object that is a merger of the arguments
+    open_bypass - method type of the bypass
+      defaults to property
+      if None it is a regular method
+    close_type - method type of the bypass
+      defaults to property
+      if None it is a regular method
 
     Example:
     Pipe.carry_key and Pipe.re_key are good examples of this. carry_key is a
@@ -266,32 +287,73 @@ class Pipe:
     >>>   ).re_key.list()  # re_key now merges the modified and filtered values back together and passes them to list
     [(1, 4), (3, 8)]
     '''
-    setattr(cls, open_name, property(cls.open_bypass))  # bypass opener
+    if open_bypass is None:
+      def open_bypass(self):
+        '''
+        Opens a bypass Pipe that will take part of the output from the previous
+        pipe section.
+        Used multiple times by Pipe.add_bypass but assigned as a property with
+        different names to show its relationship with its related closing bypass
+        property method.
+        '''
+        return Pipe(
+            reservoir = Drip(),
+            enclosing_pipe = self,
+            bypass_properties = dotdict(
+                open_name = open_name,
+                close_name = close_name,
+                split = split,
+                merge = merge,
+              ),
+          )
 
-    def close_bypass(self):
-      enclosing_pipe = self.enclosing_pipe
+      setattr(cls, open_name, property(open_bypass))  # bypass opener
 
-      bpp = Bypass(
-          bypass = self,
-          iterable = enclosing_pipe,
-          drip_handle = self.reservoir,
-          split = split,
-          merge = merge,
-        )
+    else:
+      setattr(cls, open_name, open_bypass)  # bypass opener
 
-      return Pipe(
-          iterable_pre_load = enclosing_pipe.preloaded,
-          function_pipe = bpp,
-          reservoir = enclosing_pipe.reservoir,
-        )
+    if close_bypass is None:
+      def close_bypass(self):
+        '''
+        Closes the bypass that was opened with open_bypass.
+        Checks to make sure open_bypass and close_bypass matches.
+        '''
+        enclosing_pipe = self.enclosing_pipe
+        b_props = self.bypass_properties
 
-    setattr(cls, close_name, property(close_bypass))
+        if b_props.close_name != close_name:
+          '''
+          Checks that opening and closing operators match.
+          '''
+          raise TypeError('Recieved a {} but was expecting a {} when closing a {} bypass Pipe.'.format(
+              close_name, b_props.close_name, b_props.open_name,))
+
+        bpp = Bypass(
+            bypass = self,
+            iterable = enclosing_pipe,
+            drip_handle = self.reservoir,
+            split = b_props.split,
+            merge = b_props.merge,
+          )
+
+        return Pipe(
+            iterable_pre_load = enclosing_pipe.preloaded,
+            function_pipe = bpp,
+            reservoir = enclosing_pipe.reservoir,
+          )
+
+      setattr(cls, close_name, property(close_bypass))
+
+    else:
+      setattr(cls, close_name, close_bypass)
 
 
 '''
 Addes all the bypasses defined in bypass.py
 '''
 add_bypasses(Pipe)
+
+
 
 
 def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
@@ -408,6 +470,10 @@ class Reservoir:
 
   def __iter__(self):
     return self
+
+  def not_empty(self):
+    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/9
+    return self.iterator is not None
 
 
 class ReservoirEmpty:

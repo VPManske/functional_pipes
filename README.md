@@ -57,6 +57,7 @@ These methods will apply to all the data piped to them (not a per data element m
 Methods that don't end in _kargs will automatically wrap a passed in arguments to the function with the * operator that. Example in Example Usage with comment "# automatic unpacking arguments".  
 If a method ends with _kargs it means the function passed into it has the ** (keyed arguments).  
 Pipe.**dict**()  
+Should only be used for closing a Pipe because if another segement draws from dict the next segment will only get the keys and the the values.  
 Pipe.**frozenset**()  
 Pipe.**set**()  
 Pipe.**list**()  

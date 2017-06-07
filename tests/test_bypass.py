@@ -10,12 +10,14 @@ class TestPipeBypasses(unittest.TestCase):
     Pipe.add_method(gener=map, iter_index=1)
     Pipe.add_method(gener=filter, iter_index=1)
     Pipe.add_method(Expand)
+    Pipe.add_method(gener=tuple, is_valve=True)
 
   @classmethod
   def tearDownClass(self):
     delattr(Pipe, 'filter')
     delattr(Pipe, 'map')
     delattr(Pipe, 'Expand')
+    delattr(Pipe, 'tuple')
 
   def test_carry_key_no_size_change(self):
     data_1 = (1, 2), (3, 4), (5, 6)
@@ -78,6 +80,25 @@ class TestPipeBypasses(unittest.TestCase):
     self.assertEqual(
         tuple(Pipe(data_3).carry_value.Expand().re_value),
         result_3
+      )
+
+  def test_wrong_closing_bypass(self):
+    '''
+    A bypass that is closed with the wrong closer should raise an TypeError.
+    '''
+    Pipe().carry_key.re_key
+
+    with self.assertRaises(TypeError):
+      Pipe().carry_key.re_value
+
+  def test_pass_key(self):
+    data_1 = dict(a=1, b=2, c=3), dict(a=4, b=5, c=6), dict(a=7, b=8, c=9)
+
+    self.assertEqual(
+        Pipe(data_1
+          ).pass_val['b'].map(lambda val: 2 * val
+          ).return_val.tuple(),
+        (dict(a=1, b=4, c=3), dict(a=4, b=10, c=6), dict(a=7, b=16, c=9))
       )
 
 

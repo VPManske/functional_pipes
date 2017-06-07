@@ -1,3 +1,38 @@
+from functional_pipes.more_collections import dotdict
+
+
+def add_bypasses(pipe_class):
+  for definition in bypass_definitions:
+    pipe_class.add_bypass(**definition)
+
+
+
+class dict_carry_open:
+  open_name = 'pass_val'
+  close_name = 'return_val'
+
+  def __init__(self, enclosing_pipe):
+    self.enclosing_pipe = enclosing_pipe
+
+  def __getitem__(self, key):
+    enclosing_pipe = self.enclosing_pipe
+
+    def merge(dictionary, value):
+      dictionary[key] = value
+      return dictionary
+
+    return self.enclosing_pipe.__class__(
+        reservoir = Drip(),
+        enclosing_pipe = enclosing_pipe,
+        bypass_properties = dotdict(
+            open_name = self.open_name,
+            close_name = self.close_name,
+            split = lambda dictionary: (dictionary, dictionary[key]),
+            merge = merge,
+          ),
+      )
+
+
 bypass_definitions = (
     dict(
         open_name = 'carry_key',
@@ -11,11 +46,13 @@ bypass_definitions = (
         split = lambda key_val: (key_val[1], key_val[0]),
         merge = lambda val, bypass_key: (bypass_key, val),
       ),
+    dict(
+        open_name = dict_carry_open.open_name,
+        close_name = dict_carry_open.close_name,
+        open_bypass = property(dict_carry_open),
+      ),
   )
 
-def add_bypasses(pipe_class):
-  for definition in bypass_definitions:
-    pipe_class.add_bypass(**definition)
 
 
 class Bypass:
