@@ -1,3 +1,7 @@
+'''
+Cannot be used.
+'''
+
 import more_itertools as mi
 
 

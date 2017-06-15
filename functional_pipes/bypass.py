@@ -8,6 +8,9 @@ def add_bypasses(pipe_class):
 
 
 class dict_carry_open:
+  '''
+  Class that allows dictionary object to bypass a Pipe.
+  '''
   open_name = 'pass_val'
   close_name = 'return_val'
 
