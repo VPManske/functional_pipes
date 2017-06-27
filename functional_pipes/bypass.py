@@ -1,3 +1,8 @@
+'''
+Use to carry values around multiple pipe segments
+and reconnect them later.
+'''
+
 from functional_pipes.more_collections import dotdict
 
 
@@ -36,11 +41,19 @@ class dict_carry_open:
       )
 
 
+
+
+
 bypass_definitions = (
     dict(
         open_name = 'carry_key',
         close_name = 're_key',
         split = lambda key_val: (key_val[0], key_val[1]),
+        merge = lambda key, bypass_val: (key, bypass_val),
+      ),
+    dict(
+        open_name = 'keyed',
+        split = lambda value: (value, value),
         merge = lambda key, bypass_val: (key, bypass_val),
       ),
     dict(
@@ -60,7 +73,7 @@ bypass_definitions = (
 
 class Bypass:
   '''
-  Use to carry values around a pipe segment that and reconnect them.
+  Use to carry values around a pipe segment and reconnect them.
 
   The self.store object will be merged the object that is put through the bypass.
 

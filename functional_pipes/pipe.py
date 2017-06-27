@@ -1,4 +1,3 @@
-from functools import partial
 from collections import ChainMap, defaultdict
 from inspect import signature
 from importlib import import_module
@@ -41,8 +40,6 @@ class Pipe:
     to merge the bypass back into the main pipe.
     '''
     self.bypass_properties = bypass_properties
-
-    assert (not enclosing_pipe and not bypass_properties) or (enclosing_pipe and bypass_properties)
 
   def __call__(self, iterable):
     self.reservoir(iterable)
@@ -98,6 +95,10 @@ class Pipe:
         Pipe(data).filter(lambda x, y: x > y)
       Ex without star_wrap:
         Pipe(data).filter(lambda xy: xy[0] > xy[1])
+
+    double_star_wrap - int or str that specifies what argument to wrap with a double star.
+      Used so that functions can have named agguments.
+      Also, this helps the user keep track what the passed objects are in each link.
     '''
     if not gener_name:
       gener_name = gener.__name__
@@ -148,20 +149,25 @@ class Pipe:
               bypass_properties = self.bypass_properties,
             )
 
+          if to_return.bypass_properties and \
+              to_return.bypass_properties.close_name is None:
+            # Closes single bypass pipe if it is one
+            to_return = to_return.bypass_properties.close_bypass(to_return)
+
         return to_return
 
     else:
       def wrapper(self, *args, **kargs):
         args, kargs = _assemble_args(
-                  function_pipe = self.function_pipe,
-                  iter_index = iter_index,
-                  args = args,
-                  kargs = kargs,
-                  star_wrap = star_wrap,
-                  double_star_wrap = double_star_wrap,
-                )
+            function_pipe = self.function_pipe,
+            iter_index = iter_index,
+            args = args,
+            kargs = kargs,
+            star_wrap = star_wrap,
+            double_star_wrap = double_star_wrap,
+          )
 
-        return Pipe(
+        to_return = Pipe(
             iterable_pre_load = self.preloaded,
             function_pipe = gener(*args, **kargs),
             reservoir = self.reservoir,
@@ -169,6 +175,13 @@ class Pipe:
             enclosing_pipe = self.enclosing_pipe,
             bypass_properties = self.bypass_properties,
           )
+
+        if to_return.bypass_properties and \
+            to_return.bypass_properties.close_name is None:
+          # Closes single bypass pipe if it is one
+          to_return = to_return.bypass_properties.close_bypass(to_return)
+
+        return to_return
 
     # sets the wrapped function as a method in Pipe
     setattr(cls, gener_name, wrapper)
@@ -227,34 +240,9 @@ class Pipe:
       )
 
   @classmethod
-  def add_key_map_method(cls, func, func_name=None, no_over_write=True):
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/6
-
-    '''
-    Similar to Pipe.add_map_method but returns a key and the function output
-    instead of just mapping the function value.
-
-    Example:
-    >>> Pipe('1', '2').int_key().tuple()
-    (('1', 1), ('2', 2))
-
-    func - must be a function.
-      if a lambda function func_name must be a string for the method name.
-    func_name - the Pipe method name
-      defaults to the func.__name__ string if not defined
-    no_over_write - If True an AttributeError will be raised if there is already a method with
-      the gener_name or gener.__name__. If False any method will be overwritten.
-    '''
-    return cls.add_map_method(
-        func = lambda val: (val, func(val)),
-        func_name = func_name,
-        no_over_write = no_over_write,
-      )
-
-  @classmethod
   def add_bypass(cls,
         open_name,
-        close_name,
+        close_name = None,
         split = None,
         merge = None,
         open_bypass = None,
@@ -266,6 +254,9 @@ class Pipe:
 
     open_name - method name to open bypass
     close_name - method name to close bypass
+      If not defined then this will be treated as a single bypass pipe. Meaning
+      after the first method is defined for the bypass pipe the bypass pipe
+      will be closed.
     split - function to split the passed objects into two parts.
       (bypass object, pass into bypass pipe)
     merge - function that takes two arguments (bypass object, object from bypass pipe)
@@ -273,7 +264,7 @@ class Pipe:
     open_bypass - method type of the bypass
       defaults to property
       if None it is a regular method
-    close_type - method type of the bypass
+    close_bypass - method type of the bypass
       defaults to property
       if None it is a regular method
 
@@ -287,31 +278,6 @@ class Pipe:
     >>>   ).re_key.list()  # re_key now merges the modified and filtered values back together and passes them to list
     [(1, 4), (3, 8)]
     '''
-    if open_bypass is None:
-      def open_bypass(self):
-        '''
-        Opens a bypass Pipe that will take part of the output from the previous
-        pipe section.
-        Used multiple times by Pipe.add_bypass but assigned as a property with
-        different names to show its relationship with its related closing bypass
-        property method.
-        '''
-        return Pipe(
-            reservoir = Drip(),
-            enclosing_pipe = self,
-            bypass_properties = dotdict(
-                open_name = open_name,
-                close_name = close_name,
-                split = split,
-                merge = merge,
-              ),
-          )
-
-      setattr(cls, open_name, property(open_bypass))  # bypass opener
-
-    else:
-      setattr(cls, open_name, open_bypass)  # bypass opener
-
     if close_bypass is None:
       def close_bypass(self):
         '''
@@ -342,10 +308,34 @@ class Pipe:
             reservoir = enclosing_pipe.reservoir,
           )
 
+    if open_bypass is None:
+      def open_bypass(self):
+        '''
+        Opens a bypass Pipe that will take part of the output from the previous
+        pipe section.
+        Used multiple times by Pipe.add_bypass but assigned as a property with
+        different names to show its relationship with its related closing bypass
+        property method.
+        '''
+        return Pipe(
+            reservoir = Drip(),
+            enclosing_pipe = self,
+            bypass_properties = dotdict(
+                open_name = open_name,
+                close_name = close_name,
+                split = split,
+                merge = merge,
+                close_bypass = close_bypass,
+              ),
+          )
+
+      open_bypass = property(open_bypass)
+
+    setattr(cls, open_name, open_bypass)  # bypass opener
+
+    if close_name:
       setattr(cls, close_name, property(close_bypass))
 
-    else:
-      setattr(cls, close_name, close_bypass)
 
   @classmethod
   def load(cls, *args):

@@ -1,4 +1,4 @@
-import unittest, types
+import unittest
 
 from functional_pipes.pipe import Pipe, Reservoir
 from functional_pipes.bypass import Drip, Bypass
@@ -101,6 +101,18 @@ class TestPipeBypasses(unittest.TestCase):
         (dict(a=1, b=4, c=3), dict(a=4, b=10, c=6), dict(a=7, b=16, c=9))
       )
 
+  def test_keyed(self):
+    data = 1, 2, 3, 4
+    ref = tuple((val, 2 * val) for val in data)
+
+    self.assertEqual(
+        Pipe(data).keyed.map(lambda val: 2 * val).tuple(),
+        ref
+      )
+
+    pipe_def = Pipe().keyed.map(lambda val: 2 * val).tuple()
+    self.assertEqual(pipe_def(data), ref)
+    self.assertEqual(pipe_def(data), ref)  # not a reference
 
 
 class TestBypass(unittest.TestCase):

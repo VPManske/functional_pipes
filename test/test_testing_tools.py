@@ -24,7 +24,6 @@ class TestMethods(unittest.TestCase):
       tuple(Pipe(data_1).limit_size(2))
 
 
-
 class TestMapMethods(unittest.TestCase):
   @classmethod
   def setUpClass(self):
