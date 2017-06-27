@@ -1,19 +1,8 @@
+'''
+custom methods that are not other libraries
+'''
+
 from functional_pipes.wrap_gener import wrap_gener
-
-
-def add_class_methods(pipe_class):
-  # methods
-  for method_properties in methods_to_add:
-    if isinstance(method_properties, dict):
-      name = pipe_class.add_method(**method_properties)
-
-    else:
-      name = pipe_class.add_method(method_properties)
-
-    method_names.add(name)
-
-
-method_names = set() # holds all the method names that were added to Pipe
 
 
 # define functions
@@ -56,3 +45,5 @@ methods_to_add = (
     wrap_gener(zip_to_dict),
   )
 
+
+map_methods_to_add = ()

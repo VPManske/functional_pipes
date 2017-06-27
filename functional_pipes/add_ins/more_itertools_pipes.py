@@ -1,5 +1,5 @@
 '''
-Cannot be used.
+Cannot be used yet.
 '''
 
 import more_itertools as mi

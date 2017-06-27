@@ -1,18 +1,16 @@
 import unittest, io
 
 from functional_pipes import Pipe
-from functional_pipes.built_in_functions import add_class_methods, method_names
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
-    add_class_methods(Pipe)
+    Pipe.load('built_in_functions')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('built_in_functions')
 
   def test_dict(self):
     data_1 = ('a', 1), ('b', 2), ('c', 3)
@@ -342,12 +340,11 @@ class TestMethods(unittest.TestCase):
 class TestMapMethods(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
-    add_class_methods(Pipe)
+    Pipe.load('built_in_functions')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('built_in_functions')
 
   def test_dict_e(self):
     data_1 = (('a', 1), ('b', 2)), (('c', 2), ('d', 3))
@@ -640,315 +637,314 @@ class TestMapMethods(unittest.TestCase):
         tuple(type(d) for d in data_1)
       )
 
-class TestKeyMapMethods(unittest.TestCase):
-  @classmethod
-  def setUpClass(cls):
-    add_class_methods(Pipe)
-
-  @classmethod
-  def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
-
-  def test_dict_e_keyed(self):
-    data_1 = (('a', 1), ('b', 2)), (('c', 2), ('d', 3))
-
-    self.assertEqual(
-        Pipe(data_1).dict_e_keyed().tuple(),
-        tuple((kv, dict(kv)) for kv in data_1)
-      )
-
-  def test_frozenset_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).frozenset_e_keyed().tuple(),
-        tuple((vals, frozenset(vals)) for vals in data_1)
-      )
-
-  def test_set_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).set_e_keyed().tuple(),
-        tuple((vals, set(vals)) for vals in data_1)
-      )
-
-  def test_list_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).list_e_keyed().tuple(),
-        tuple((vals, list(vals)) for vals in data_1)
-      )
-
-  def test_tuple_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).tuple_e_keyed().tuple(),
-        tuple(zip(data_1, data_1))
-      )
-
-  def test_reversed_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1
-          ).reversed_e_keyed(
-          ).map(lambda key, val: (key, tuple(val))
-          ).tuple(),
-        tuple((vals, tuple(reversed(vals))) for vals in data_1)
-      )
-
-  def test_sorted_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).sorted_e_keyed().tuple(),
-        tuple((vals, sorted(vals)) for vals in data_1)
-      )
-
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    # self.assertEqual(
-    #     Pipe(data_1).sorted_e(reverse=True).tuple(),
-    #     tuple(sorted(vals, reverse=True) for vals in data_1)
-    #   )
-
-  def test_max_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).max_e_keyed().tuple(),
-        tuple((vals, max(vals)) for vals in data_1)
-      )
-
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    # self.assertEqual(
-    #     Pipe(data_1).sorted_e(reverse=True).tuple(),
-    #     tuple(sorted(vals, reverse=True) for vals in data_1)
-    #   )
-
-  def test_min_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).min_e_keyed().tuple(),
-        tuple((vals, min(vals)) for vals in data_1)
-      )
-
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    # self.assertEqual(
-    #     Pipe(data_1).sorted_e(reverse=True).tuple(),
-    #     tuple(sorted(vals, reverse=True) for vals in data_1)
-    #   )
+# class TestKeyMapMethods(unittest.TestCase):
+#   @classmethod
+#   def setUpClass(cls):
+#     Pipe.load('built_in_functions')
+
+#   @classmethod
+#   def tearDownClass(self):
+#     Pipe.unload('built_in_functions')
+
+#   def test_dict_e_keyed(self):
+#     data_1 = (('a', 1), ('b', 2)), (('c', 2), ('d', 3))
+
+#     self.assertEqual(
+#         Pipe(data_1).dict_e_keyed().tuple(),
+#         tuple((kv, dict(kv)) for kv in data_1)
+#       )
+
+#   def test_frozenset_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).frozenset_e_keyed().tuple(),
+#         tuple((vals, frozenset(vals)) for vals in data_1)
+#       )
+
+#   def test_set_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).set_e_keyed().tuple(),
+#         tuple((vals, set(vals)) for vals in data_1)
+#       )
+
+#   def test_list_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).list_e_keyed().tuple(),
+#         tuple((vals, list(vals)) for vals in data_1)
+#       )
+
+#   def test_tuple_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).tuple_e_keyed().tuple(),
+#         tuple(zip(data_1, data_1))
+#       )
+
+#   def test_reversed_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1
+#           ).reversed_e_keyed(
+#           ).map(lambda key, val: (key, tuple(val))
+#           ).tuple(),
+#         tuple((vals, tuple(reversed(vals))) for vals in data_1)
+#       )
+
+#   def test_sorted_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).sorted_e_keyed().tuple(),
+#         tuple((vals, sorted(vals)) for vals in data_1)
+#       )
+
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     # self.assertEqual(
+#     #     Pipe(data_1).sorted_e(reverse=True).tuple(),
+#     #     tuple(sorted(vals, reverse=True) for vals in data_1)
+#     #   )
+
+#   def test_max_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).max_e_keyed().tuple(),
+#         tuple((vals, max(vals)) for vals in data_1)
+#       )
+
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     # self.assertEqual(
+#     #     Pipe(data_1).sorted_e(reverse=True).tuple(),
+#     #     tuple(sorted(vals, reverse=True) for vals in data_1)
+#     #   )
+
+#   def test_min_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).min_e_keyed().tuple(),
+#         tuple((vals, min(vals)) for vals in data_1)
+#       )
+
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     # self.assertEqual(
+#     #     Pipe(data_1).sorted_e(reverse=True).tuple(),
+#     #     tuple(sorted(vals, reverse=True) for vals in data_1)
+#     #   )
 
-  def test_sum_e_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
+#   def test_sum_e_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 7, 2, 5, 5)
 
-    self.assertEqual(
-        Pipe(data_1).sum_e_keyed().tuple(),
-        tuple((vals, sum(vals)) for vals in data_1)
-      )
+#     self.assertEqual(
+#         Pipe(data_1).sum_e_keyed().tuple(),
+#         tuple((vals, sum(vals)) for vals in data_1)
+#       )
 
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    # self.assertEqual(
-    #     Pipe(data_1).sorted_e(reverse=True).tuple(),
-    #     tuple(sorted(vals, reverse=True) for vals in data_1)
-    #   )
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     # self.assertEqual(
+#     #     Pipe(data_1).sorted_e(reverse=True).tuple(),
+#     #     tuple(sorted(vals, reverse=True) for vals in data_1)
+#     #   )
 
-  def test_str_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+#   def test_str_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
 
-    self.assertEqual(
-        Pipe(data_1).str_keyed().tuple(),
-        tuple((vals, str(vals)) for vals in data_1)
-      )
+#     self.assertEqual(
+#         Pipe(data_1).str_keyed().tuple(),
+#         tuple((vals, str(vals)) for vals in data_1)
+#       )
 
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    # for encoding and errors arguments
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     # for encoding and errors arguments
 
-  def test_ascii_keyed(self):
-    data_1 = -1, 2, -3, 4
+#   def test_ascii_keyed(self):
+#     data_1 = -1, 2, -3, 4
 
-    self.assertEqual(
-        Pipe(data_1).ascii_keyed().tuple(),
-        tuple((d, ascii(d)) for d in data_1)
-      )
+#     self.assertEqual(
+#         Pipe(data_1).ascii_keyed().tuple(),
+#         tuple((d, ascii(d)) for d in data_1)
+#       )
 
-  def test_bin_keyed(self):
-    data_1 = -1, 2, -3, 4
-
-    self.assertEqual(
-        Pipe(data_1).bin_keyed().tuple(),
-        tuple((d, bin(d)) for d in data_1)
-      )
-
-  def test_bool_keyed(self):
-    data_1 = -1, 0, -3, 4
-
-    self.assertEqual(
-        Pipe(data_1).bool_keyed().tuple(),
-        tuple((d, bool(d)) for d in data_1)
-      )
-
-  def test_callable_keyed(self):
-    data_1 = -1, map, -3, str
-
-    self.assertEqual(
-        Pipe(data_1).callable_keyed().tuple(),
-        tuple((d, callable(d)) for d in data_1)
-      )
-
-  def test_chr_keyed(self):
-    data_1 = 3, 39, 55
-
-    self.assertEqual(
-        Pipe(data_1).chr_keyed().tuple(),
-        tuple((d, chr(d)) for d in data_1)
-      )
-
-  def test_classmethod_keyed(self):
-    data_1 = -1, map, -3, str
-
-    for obj, cm in Pipe(data_1).classmethod_keyed():
-      self.assertTrue(isinstance(cm, classmethod))
-
-  def test_staticmethod_keyed(self):
-    data_1 = -1, map, -3, str
-
-    for obj, cm in Pipe(data_1).staticmethod_keyed():
-      self.assertTrue(isinstance(cm, staticmethod))
-
-  def test_eval_keyed(self):
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    data_1 = '5 + 4', '"hi" + "there"'
-
-    self.assertEqual(
-        Pipe(data_1).eval_keyed().tuple(),
-        tuple((d, eval(d)) for d in data_1)
-      )
-
-  def test_float_keyed(self):
-    data_1 = 3, 39, 55, '-44'
-
-    self.assertEqual(
-        Pipe(data_1).float_keyed().tuple(),
-        tuple((d, float(d)) for d in data_1)
-      )
-
-  def test_hash_keyed(self):
-    data_1 = 3, 39, 55, '-44'
-
-    self.assertEqual(
-        Pipe(data_1).hash_keyed().tuple(),
-        tuple((d, hash(d)) for d in data_1)
-      )
-
-  def test_hex_keyed(self):
-    data_1 = 3, 39, 55
-
-    self.assertEqual(
-        Pipe(data_1).hex_keyed().tuple(),
-        tuple((d, hex(d)) for d in data_1)
-      )
-
-  def test_id_keyed(self):
-    data_1 = 3, 39, 55, '-44'
-
-    self.assertEqual(
-        Pipe(data_1).id_keyed().tuple(),
-        tuple((d, id(d)) for d in data_1)
-      )
-
-  def test_int_keyed(self):
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    data_1 = 3, 39.0, 55, '-44'
-
-    self.assertEqual(
-        Pipe(data_1).int_keyed().tuple(),
-        tuple((d, int(d)) for d in data_1)
-      )
-
-  def test_iter_keyed(self):
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-    tuple_iterator = type(iter(data_1))
-
-    self.assertTrue(
-        Pipe(data_1).iter_keyed(
-          ).map(lambda key, val: val
-          ).type(
-          ).map(lambda t: str(t) == str(tuple_iterator)
-          ).all()
-        )
-
-  def test_len_keyed(self):
-    data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
-
-    self.assertEqual(
-        Pipe(data_1).len_keyed().tuple(),
-        tuple((vals, len(vals)) for vals in data_1)
-      )
-
-  def test_oct_keyed(self):
-    data_1 = 3, 39, 55
-
-    self.assertEqual(
-        Pipe(data_1).oct_keyed().tuple(),
-        tuple((d, oct(d)) for d in data_1)
-      )
-
-  # def test_open_keyed(self):
-  #   # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-  #   data_1 = 'test_pipe.py', 'test_pipe_multi.py'
-  #   data_1_iter = iter(data_1)
-
-  #   for path, fs in Pipe(data_1).open_keyed():
-  #     self.assertEqual(path, next(data_1_iter))
-  #     self.assertTrue(isinstance(fs, io.TextIOWrapper))
-  #     fs.close()
-
-  def test_ord_keyed(self):
-    data_1 = 'abced45'
-
-    self.assertEqual(
-        Pipe(data_1).ord_keyed().tuple(),
-        tuple((d, ord(d)) for d in data_1)
-      )
-
-  def test_range_keyed(self):
-    data_1 = 1, 2, 4
-
-    self.assertEqual(
-        Pipe(data_1).range_keyed().tuple(),
-        tuple((d, range(d) )for d in data_1)
-      )
-
-  def test_repr_keyed(self):
-    data_1 = 1, 2, 4
-
-    self.assertEqual(
-        Pipe(data_1).repr_keyed().tuple(),
-        tuple((d, repr(d)) for d in data_1)
-      )
-
-  def test_round_keyed(self):
-    data_1 = 1.4, 2.6, 4.3
-
-    self.assertEqual(
-        Pipe(data_1).round_keyed().tuple(),
-        tuple((d, round(d)) for d in data_1)
-      )
-
-  def test_type_keyed(self):
-    # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    data_1 = 1.4, '2.6', map
-
-    self.assertEqual(
-        Pipe(data_1).type_keyed().tuple(),
-        tuple((d, type(d)) for d in data_1)
-      )
+#   def test_bin_keyed(self):
+#     data_1 = -1, 2, -3, 4
+
+#     self.assertEqual(
+#         Pipe(data_1).bin_keyed().tuple(),
+#         tuple((d, bin(d)) for d in data_1)
+#       )
+
+#   def test_bool_keyed(self):
+#     data_1 = -1, 0, -3, 4
+
+#     self.assertEqual(
+#         Pipe(data_1).bool_keyed().tuple(),
+#         tuple((d, bool(d)) for d in data_1)
+#       )
+
+#   def test_callable_keyed(self):
+#     data_1 = -1, map, -3, str
+
+#     self.assertEqual(
+#         Pipe(data_1).callable_keyed().tuple(),
+#         tuple((d, callable(d)) for d in data_1)
+#       )
+
+#   def test_chr_keyed(self):
+#     data_1 = 3, 39, 55
+
+#     self.assertEqual(
+#         Pipe(data_1).chr_keyed().tuple(),
+#         tuple((d, chr(d)) for d in data_1)
+#       )
+
+#   def test_classmethod_keyed(self):
+#     data_1 = -1, map, -3, str
+
+#     for obj, cm in Pipe(data_1).classmethod_keyed():
+#       self.assertTrue(isinstance(cm, classmethod))
+
+#   def test_staticmethod_keyed(self):
+#     data_1 = -1, map, -3, str
+
+#     for obj, cm in Pipe(data_1).staticmethod_keyed():
+#       self.assertTrue(isinstance(cm, staticmethod))
+
+#   def test_eval_keyed(self):
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     data_1 = '5 + 4', '"hi" + "there"'
+
+#     self.assertEqual(
+#         Pipe(data_1).eval_keyed().tuple(),
+#         tuple((d, eval(d)) for d in data_1)
+#       )
+
+#   def test_float_keyed(self):
+#     data_1 = 3, 39, 55, '-44'
+
+#     self.assertEqual(
+#         Pipe(data_1).float_keyed().tuple(),
+#         tuple((d, float(d)) for d in data_1)
+#       )
+
+#   def test_hash_keyed(self):
+#     data_1 = 3, 39, 55, '-44'
+
+#     self.assertEqual(
+#         Pipe(data_1).hash_keyed().tuple(),
+#         tuple((d, hash(d)) for d in data_1)
+#       )
+
+#   def test_hex_keyed(self):
+#     data_1 = 3, 39, 55
+
+#     self.assertEqual(
+#         Pipe(data_1).hex_keyed().tuple(),
+#         tuple((d, hex(d)) for d in data_1)
+#       )
+
+#   def test_id_keyed(self):
+#     data_1 = 3, 39, 55, '-44'
+
+#     self.assertEqual(
+#         Pipe(data_1).id_keyed().tuple(),
+#         tuple((d, id(d)) for d in data_1)
+#       )
+
+#   def test_int_keyed(self):
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     data_1 = 3, 39.0, 55, '-44'
+
+#     self.assertEqual(
+#         Pipe(data_1).int_keyed().tuple(),
+#         tuple((d, int(d)) for d in data_1)
+#       )
+
+#   def test_iter_keyed(self):
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+#     tuple_iterator = type(iter(data_1))
+
+#     self.assertTrue(
+#         Pipe(data_1).iter_keyed(
+#           ).map(lambda key, val: val
+#           ).type(
+#           ).map(lambda t: str(t) == str(tuple_iterator)
+#           ).all()
+#         )
+
+#   def test_len_keyed(self):
+#     data_1 = (2, 4, 6, 3), (1, 2, 2, 5, 5)
+
+#     self.assertEqual(
+#         Pipe(data_1).len_keyed().tuple(),
+#         tuple((vals, len(vals)) for vals in data_1)
+#       )
+
+#   def test_oct_keyed(self):
+#     data_1 = 3, 39, 55
+
+#     self.assertEqual(
+#         Pipe(data_1).oct_keyed().tuple(),
+#         tuple((d, oct(d)) for d in data_1)
+#       )
+
+#   # def test_open_keyed(self):
+#   #   # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#   #   data_1 = 'test_pipe.py', 'test_pipe_multi.py'
+#   #   data_1_iter = iter(data_1)
+
+#   #   for path, fs in Pipe(data_1).open_keyed():
+#   #     self.assertEqual(path, next(data_1_iter))
+#   #     self.assertTrue(isinstance(fs, io.TextIOWrapper))
+#   #     fs.close()
+
+#   def test_ord_keyed(self):
+#     data_1 = 'abced45'
+
+#     self.assertEqual(
+#         Pipe(data_1).ord_keyed().tuple(),
+#         tuple((d, ord(d)) for d in data_1)
+#       )
+
+#   def test_range_keyed(self):
+#     data_1 = 1, 2, 4
+
+#     self.assertEqual(
+#         Pipe(data_1).range_keyed().tuple(),
+#         tuple((d, range(d) )for d in data_1)
+#       )
+
+#   def test_repr_keyed(self):
+#     data_1 = 1, 2, 4
+
+#     self.assertEqual(
+#         Pipe(data_1).repr_keyed().tuple(),
+#         tuple((d, repr(d)) for d in data_1)
+#       )
+
+#   def test_round_keyed(self):
+#     data_1 = 1.4, 2.6, 4.3
+
+#     self.assertEqual(
+#         Pipe(data_1).round_keyed().tuple(),
+#         tuple((d, round(d)) for d in data_1)
+#       )
+
+#   def test_type_keyed(self):
+#     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+#     data_1 = 1.4, '2.6', map
+
+#     self.assertEqual(
+#         Pipe(data_1).type_keyed().tuple(),
+#         tuple((d, type(d)) for d in data_1)
+#       )
 
 
 if __name__ == '__main__':

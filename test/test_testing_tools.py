@@ -1,18 +1,16 @@
 import unittest, io
 
 from functional_pipes import Pipe
-from functional_pipes.testing_tools import add_class_methods, method_names
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
   def setUpClass(self):
-    add_class_methods(Pipe)
+    Pipe.load('testing_tools')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('testing_tools')
 
   def test_limit_size(self):
     data_1 = 1, 2, 3
@@ -30,12 +28,11 @@ class TestMethods(unittest.TestCase):
 class TestMapMethods(unittest.TestCase):
   @classmethod
   def setUpClass(self):
-    add_class_methods(Pipe)
+    Pipe.load('testing_tools')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('testing_tools')
 
   def test_look_in(self):
     data_1 = [1, 2, 3, 4]

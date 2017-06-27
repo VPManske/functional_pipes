@@ -1,18 +1,16 @@
-import unittest, io
+import unittest
 
 from functional_pipes import Pipe
-from functional_pipes.operator_pipes import add_class_methods, method_names
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
-    add_class_methods(Pipe)
+    Pipe.load('operator_pipes')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('operator_pipes')
 
   def test_mul(self):
     data_1 = 1, 2, 3, 4

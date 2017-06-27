@@ -1,26 +1,17 @@
 import unittest, io
 from itertools import chain
 
-from functional_pipes import Pipe, built_in_functions, custom_pipes, testing_tools
+from functional_pipes import Pipe
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
   def setUpClass(self):
-    built_in_functions.add_class_methods(Pipe)
-    custom_pipes.add_class_methods(Pipe)
-    testing_tools.add_class_methods(Pipe)
+    Pipe.load('built_in_functions', 'custom_pipes', 'testing_tools')
 
   @classmethod
   def tearDownClass(self):
-    method_names = chain(*(package.method_names for package in (
-        built_in_functions,
-        custom_pipes,
-        testing_tools,
-      )))
-
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('built_in_functions', 'custom_pipes', 'testing_tools')
 
   def test_zip_internal(self):
     data_1 = (1, 2, 3), (4, 5, 6), (7, 8, 9)

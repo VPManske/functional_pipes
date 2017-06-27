@@ -1,27 +1,27 @@
 import unittest, io
-from itertools import chain
+import itertools as it
 
 from functional_pipes import Pipe
-from functional_pipes.itertools_pipes import add_class_methods, method_names
 
 
 class TestMethods(unittest.TestCase):
   @classmethod
   def setUpClass(self):
-    add_class_methods(Pipe)
+    Pipe.load('itertools_pipes')
 
   @classmethod
   def tearDownClass(self):
-    for name in method_names:
-      delattr(Pipe, name)
+    Pipe.unload('itertools_pipes')
 
-  # def test_groupby(self):
-  #   data_1 = ('a', 1), ('b', 2), ('a', 3), ('b', 4)
-  #   data_2 = ('a', 1), ('a', 3), ('b', 2), ('b', 4)
-  #   self.assertEqual(
-  #       Pipe(data_1).groupby(lambda key: key[0]),
+  def test_groupby_no_key(self):
+    data = 1, 2, 3, 1, 2, 3, 4
 
-  #     )
+    to_tuple = lambda groups: tuple((key, tuple(group)) for key, group in groups)
+
+    self.assertEqual(
+        to_tuple(Pipe(data).groupby()),
+        to_tuple(it.groupby(data))
+      )
 
 
 

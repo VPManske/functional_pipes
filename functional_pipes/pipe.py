@@ -1,6 +1,8 @@
 from functools import partial
-from collections import ChainMap, deque
+from collections import ChainMap, defaultdict
 from inspect import signature
+from importlib import import_module
+
 
 from more_itertools import peekable, consume
 
@@ -100,12 +102,8 @@ class Pipe:
     if not gener_name:
       gener_name = gener.__name__
 
-    # if gener_name == 'min':
-    #   raise ValueError('min')
-
     if no_over_write and hasattr(cls, gener_name):
       raise AttributeError('Pipe class already has the gener ' + gener_name)
-
 
     '''
     Creates a wrapped generator that can be added to the class Pipe.
@@ -190,6 +188,7 @@ class Pipe:
     '''
     Similar to Pipe.add_method but takes a function not a generator.
     The function becomes the mapping function.
+    returns the string of the method name
 
     func - must be a function.
       if a lambda function func_name must be a string for the method name.
@@ -220,6 +219,7 @@ class Pipe:
 
       return map(wrapper, iterator)
 
+    # returns the string of the method name
     return cls.add_method(
         gener = map_method_wrap,
         gener_name = func_name if func_name else func.__name__,
@@ -347,13 +347,52 @@ class Pipe:
     else:
       setattr(cls, close_name, close_bypass)
 
+  @classmethod
+  def load(cls, *args):
+    '''
+    loads the methods from the specified packages in args
 
-'''
-Addes all the bypasses defined in bypass.py
-'''
-add_bypasses(Pipe)
+    args - strings that have specify which add in packages to load
+    '''
+    for package in args:
+      add_in = import_module('functional_pipes.add_ins.' + package)
+
+      # methods
+      for method_properties in add_in.methods_to_add:
+        if isinstance(method_properties, dict):
+          name = cls.add_method(**method_properties)
+        else:
+          name = cls.add_method(method_properties)
+        cls.added_methods[package].add(name)
+
+      # map methods
+      for func_properties in add_in.map_methods_to_add:
+        if isinstance(func_properties, dict):
+          name = cls.add_map_method(**func_properties)
+        else:
+          name = cls.add_map_method(func_properties)
+        cls.added_methods[package].add(name)
+
+  @classmethod
+  def unload(cls, *args):
+    '''
+    unloads the methods from the specified packages in args
+
+    args - strings that have specify which add in packages to unload
+    '''
+    for add_in in args:
+      if add_in not in cls.added_methods:
+        raise KeyError('{} has not been loaded'.format(add_in))
+
+      for method in cls.added_methods[add_in]:
+        delattr(Pipe, method)
+
+      del cls.added_methods[add_in]
+
+  added_methods = defaultdict(set)
 
 
+add_bypasses(Pipe)  # Addes all the bypasses defined in bypass.py
 
 
 def _assemble_args(function_pipe, iter_index, args, kargs, star_wrap, double_star_wrap):
