@@ -24,10 +24,7 @@ class TestMethods(unittest.TestCase):
       )
 
     pipe_1 = Pipe().zip_internal()
-    self.assertEqual(
-        tuple(pipe_1(data_1)),
-        data_1_zipped
-      )
+    self.assertEqual(tuple(pipe_1(data_1)), data_1_zipped)
     self.assertEqual(tuple(pipe_1(data_1)), data_1_zipped) # reload the pipe
 
     self.assertEqual(
@@ -51,6 +48,20 @@ class TestMethods(unittest.TestCase):
 
     pipe_1 = Pipe().zip_to_dict().limit_size(2).tuple()
     self.assertEqual(pipe_1(data_1), result_1)
+
+  def test_flatten(self):
+    data = (1, 2), (3, 4, 5)
+    ref = 1, 2, 3, 4, 5
+
+    self.assertEqual(
+        Pipe(data).flatten().tuple(),
+        ref
+      )
+
+    pipe_empty = Pipe().flatten().tuple()
+    self.assertEqual(pipe_empty(data), ref)
+    self.assertEqual(pipe_empty(data), ref) # reload the pipe
+
 
 
 

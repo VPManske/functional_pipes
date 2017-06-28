@@ -39,10 +39,25 @@ def zip_to_dict(iterable):
       break
 
 
+def flatten(iterable):
+  '''
+  expands the items in iterable and yields one at a time
+
+  Example:
+  >>> data = [(1, 2), (3, 4, 5)]
+  >>> Pipe(data).flatten().tuple()
+  (1, 2, 3, 4, 5)
+  '''
+  for elements in iterable:
+    for ele in elements:
+      yield ele
+
+
 # profile methods to add
 methods_to_add = (
     wrap_gener(zip_internal),
     wrap_gener(zip_to_dict),
+    wrap_gener(flatten),
   )
 
 
