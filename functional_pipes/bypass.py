@@ -3,73 +3,6 @@ Use to carry values around multiple pipe segments
 and reconnect them later.
 '''
 
-from functional_pipes.more_collections import dotdict
-
-
-def add_bypasses(pipe_class):
-  for definition in bypass_definitions:
-    pipe_class.add_bypass(**definition)
-
-
-
-class dict_carry_open:
-  '''
-  Class that allows dictionary object to bypass a Pipe.
-  '''
-  open_name = 'pass_val'
-  close_name = 'return_val'
-
-  def __init__(self, enclosing_pipe):
-    self.enclosing_pipe = enclosing_pipe
-
-  def __getitem__(self, key):
-    enclosing_pipe = self.enclosing_pipe
-
-    def merge(dictionary, value):
-      dictionary[key] = value
-      return dictionary
-
-    return self.enclosing_pipe.__class__(
-        reservoir = Drip(),
-        enclosing_pipe = enclosing_pipe,
-        bypass_properties = dotdict(
-            open_name = self.open_name,
-            close_name = self.close_name,
-            split = lambda dictionary: (dictionary, dictionary[key]),
-            merge = merge,
-          ),
-      )
-
-
-
-
-
-bypass_definitions = (
-    dict(
-        open_name = 'carry_key',
-        close_name = 're_key',
-        split = lambda key_val: (key_val[0], key_val[1]),
-        merge = lambda key, bypass_val: (key, bypass_val),
-      ),
-    dict(
-        open_name = 'keyed',
-        split = lambda value: (value, value),
-        merge = lambda key, bypass_val: (key, bypass_val),
-      ),
-    dict(
-        open_name = 'carry_value',
-        close_name = 're_value',
-        split = lambda key_val: (key_val[1], key_val[0]),
-        merge = lambda val, bypass_key: (bypass_key, val),
-      ),
-    dict(
-        open_name = dict_carry_open.open_name,
-        close_name = dict_carry_open.close_name,
-        open_bypass = property(dict_carry_open),
-      ),
-  )
-
-
 
 class Bypass:
   '''
@@ -168,3 +101,45 @@ class _drip_empty:
   Exclusive use in Drip class for indicating if it is empty or not.
   '''
   pass
+
+
+def close_bypass_default(close_name):
+  '''
+  courier function for close_bypass
+
+  close_name - name of the closing property
+
+  Needs unit test
+  '''
+  def close_bypass(self):
+    '''
+    Closes the bypass that was opened with open_bypass.
+    Checks to make sure open_bypass and close_bypass matches.
+    '''
+    enclosing_pipe = self.enclosing_pipe
+    b_props = self.bypass_properties
+
+    if b_props.close_name != close_name:
+      '''
+      Checks that opening and closing operators match.
+      '''
+      raise TypeError('Recieved a {} but was expecting a {} when closing a {} bypass Pipe.'.format(
+          close_name, b_props.close_name, b_props.open_name,))
+
+    bpp = Bypass(
+        bypass = self,
+        iterable = enclosing_pipe,
+        drip_handle = self.reservoir,
+        split = b_props.split,
+        merge = b_props.merge,
+      )
+
+    pipe_class = self.enclosing_pipe.__class__
+
+    return pipe_class(
+        iterable_pre_load = enclosing_pipe.preloaded,
+        function_pipe = bpp,
+        reservoir = enclosing_pipe.reservoir,
+      )
+
+  return close_bypass

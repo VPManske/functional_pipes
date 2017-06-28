@@ -5,7 +5,8 @@ from importlib import import_module
 
 from more_itertools import peekable, consume
 
-from functional_pipes.bypass import Bypass, Drip, add_bypasses
+from functional_pipes.bypass import Bypass, Drip, close_bypass_default
+from functional_pipes.bypass_methods import add_bypasses
 from functional_pipes.more_collections import dotdict
 
 
@@ -279,34 +280,7 @@ class Pipe:
     [(1, 4), (3, 8)]
     '''
     if close_bypass is None:
-      def close_bypass(self):
-        '''
-        Closes the bypass that was opened with open_bypass.
-        Checks to make sure open_bypass and close_bypass matches.
-        '''
-        enclosing_pipe = self.enclosing_pipe
-        b_props = self.bypass_properties
-
-        if b_props.close_name != close_name:
-          '''
-          Checks that opening and closing operators match.
-          '''
-          raise TypeError('Recieved a {} but was expecting a {} when closing a {} bypass Pipe.'.format(
-              close_name, b_props.close_name, b_props.open_name,))
-
-        bpp = Bypass(
-            bypass = self,
-            iterable = enclosing_pipe,
-            drip_handle = self.reservoir,
-            split = b_props.split,
-            merge = b_props.merge,
-          )
-
-        return Pipe(
-            iterable_pre_load = enclosing_pipe.preloaded,
-            function_pipe = bpp,
-            reservoir = enclosing_pipe.reservoir,
-          )
+      close_bypass = close_bypass_default(close_name)
 
     if open_bypass is None:
       def open_bypass(self):
