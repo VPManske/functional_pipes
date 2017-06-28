@@ -290,27 +290,6 @@ class TestMethods(unittest.TestCase):
         tuple(filter(lambda kargs: func_3(**kargs), data_3))
       )
 
-  def test_map_map_kargs(self):
-    data_1 = 1, 2, 3, 4
-    func_1 = lambda val: val > 2
-    data_2 = (1, 2), (3, 4), (5, 6), (7, 8)
-    func_2 = lambda a, b: 2 * a > b and b < 8
-    data_3 = tuple(dict(a=v1, b=v2) for v1, v2 in data_2)
-    func_3 = func_2
-
-    self.assertEqual(
-        tuple(Pipe(data_1).map(func_1)),
-        tuple(map(func_1, data_1))
-      )
-    self.assertEqual(
-        tuple(Pipe(data_2).map(func_2)),
-        tuple(map(lambda pair: func_2(*pair), data_2))
-      )
-    self.assertEqual(
-        tuple(Pipe(data_3).map_kargs(func_3)),
-        tuple(map(lambda kargs: func_3(**kargs), data_3))
-      )
-
   def test_zip(self):
     data_1 = 1, 2, 3, 4
 

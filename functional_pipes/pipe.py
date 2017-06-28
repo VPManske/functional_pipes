@@ -67,6 +67,7 @@ class Pipe:
         star_wrap = None,
         double_star_wrap = None,
         as_property = False,
+        add_wrapper = True,
       ):
     '''
     Used to add methods to the Pipe class.
@@ -104,6 +105,9 @@ class Pipe:
 
     as_property - if true the method will be added as a property instead of a method
       so that () will not have to be used to call it
+
+    add_wrapper - if True a wrapper will be put on the method else no wrapper
+      Should be False if method returns a Pipe object
     '''
     if not gener_name:
       gener_name = gener.__name__
@@ -161,7 +165,7 @@ class Pipe:
 
         return to_return
 
-    else:
+    elif add_wrapper:
       def wrapper(self, *args, **kargs):
         args, kargs = _assemble_args(
             function_pipe = self.function_pipe,
@@ -187,6 +191,9 @@ class Pipe:
           to_return = to_return.bypass_properties.close_bypass(to_return)
 
         return to_return
+
+    else:
+      wrapper = gener
 
     if as_property:
       wrapper = property(wrapper)

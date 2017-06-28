@@ -21,14 +21,38 @@ def flatten(iterable):
       yield ele
 
 
+class grab:
+  '''
+  allows the dict to bypass one pipe segment
+  '''
+  def __init__(self, pipe):
+    self.pipe = pipe
+
+  def __getitem__(self, key):
+    '''
+    self - pipe instance
+    key - the index key for each element that passes through
+    '''
+
+    return self.pipe.map(lambda indexable: indexable[key])
+
+
 methods_to_add = (
+    dict(gener=map, iter_index=1, star_wrap=0),
+    dict(gener=map, gener_name='map_kargs', iter_index=1, double_star_wrap=0),
     wrap_gener(flatten),
+    dict(gener=grab, as_property=True),
   )
 
 
 # definitions for map methods
 
 def drop_key(key_val):
+  '''
+  drops the key in the key value pairs
+
+  Ex: ((1, 2), (3, 4), (5, 6)) => (2, 4, 6)
+  '''
   return key_val[1]
 
 

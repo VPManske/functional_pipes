@@ -4,7 +4,7 @@ tests if add-ins can be loaded and unloaded as methods for the pipe class
 
 import unittest
 
-from functional_pipes.pipe import Pipe
+from functional_pipes import Pipe
 import functional_pipes.add_ins.built_in_functions as built_in_functions
 import functional_pipes.add_ins.itertools_pipes as itertools_pipes
 

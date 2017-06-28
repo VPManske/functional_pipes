@@ -27,8 +27,6 @@ methods_to_add = (
     dict(gener=enumerate),
     dict(gener=filter, iter_index=1, star_wrap=0),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
     dict(gener=filter, gener_name='filter_kargs', iter_index=1, double_star_wrap=0),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
-    dict(gener=map, iter_index=1, star_wrap=0),
-    dict(gener=map, gener_name='map_kargs', iter_index=1, double_star_wrap=0),
     dict(gener=zip),
   )
 

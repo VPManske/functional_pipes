@@ -2,7 +2,8 @@ import unittest, types
 from itertools import zip_longest
 from functools import partial
 
-from functional_pipes.pipe import Pipe, Reservoir, Valve
+from functional_pipes import Pipe
+from functional_pipes.pipe import Reservoir, Valve
 
 
 class TestPipe(unittest.TestCase):
@@ -21,7 +22,6 @@ class TestPipe(unittest.TestCase):
         'min',
         'list',
         'expand',
-        'map',
         'add',
         'tuple',
       )

@@ -1,13 +1,12 @@
 import unittest
 
-from functional_pipes.pipe import Pipe
+from functional_pipes import Pipe
 from test_bypass import Expand
 
 
 class TestPipeBypasses(unittest.TestCase):
   @classmethod
   def setUpClass(self):
-    Pipe.add_method(gener=map, iter_index=1)
     Pipe.add_method(gener=filter, iter_index=1)
     Pipe.add_method(Expand)
     Pipe.add_method(gener=tuple, is_valve=True)
@@ -15,7 +14,6 @@ class TestPipeBypasses(unittest.TestCase):
   @classmethod
   def tearDownClass(self):
     delattr(Pipe, 'filter')
-    delattr(Pipe, 'map')
     delattr(Pipe, 'Expand')
     delattr(Pipe, 'tuple')
 

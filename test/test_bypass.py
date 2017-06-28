@@ -1,6 +1,7 @@
 import unittest
 
-from functional_pipes.pipe import Pipe, Reservoir
+from functional_pipes import Pipe
+from functional_pipes.pipe import Reservoir
 from functional_pipes.bypass import Drip, Bypass
 
 
