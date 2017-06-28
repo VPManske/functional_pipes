@@ -5,7 +5,8 @@ custom methods that are not other libraries
 from functional_pipes.wrap_gener import wrap_gener
 
 
-# define functions
+# definitions for methods
+
 def zip_internal(iterable):
   '''
   Zips all objects from iterable together.
@@ -39,26 +40,14 @@ def zip_to_dict(iterable):
       break
 
 
-def flatten(iterable):
-  '''
-  expands the items in iterable and yields one at a time
-
-  Example:
-  >>> data = [(1, 2), (3, 4, 5)]
-  >>> Pipe(data).flatten().tuple()
-  (1, 2, 3, 4, 5)
-  '''
-  for elements in iterable:
-    for ele in elements:
-      yield ele
-
-
 # profile methods to add
 methods_to_add = (
     wrap_gener(zip_internal),
     wrap_gener(zip_to_dict),
-    wrap_gener(flatten),
   )
 
 
-map_methods_to_add = ()
+# definitions for map methods
+
+map_methods_to_add = (
+  )

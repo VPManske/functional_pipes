@@ -66,6 +66,7 @@ class Pipe:
         empty_error = None,
         star_wrap = None,
         double_star_wrap = None,
+        as_property = False,
       ):
     '''
     Used to add methods to the Pipe class.
@@ -100,6 +101,9 @@ class Pipe:
     double_star_wrap - int or str that specifies what argument to wrap with a double star.
       Used so that functions can have named agguments.
       Also, this helps the user keep track what the passed objects are in each link.
+
+    as_property - if true the method will be added as a property instead of a method
+      so that () will not have to be used to call it
     '''
     if not gener_name:
       gener_name = gener.__name__
@@ -184,6 +188,9 @@ class Pipe:
 
         return to_return
 
+    if as_property:
+      wrapper = property(wrapper)
+
     # sets the wrapped function as a method in Pipe
     setattr(cls, gener_name, wrapper)
 
@@ -195,7 +202,8 @@ class Pipe:
         func_name = None,
         no_over_write = True,
         star_wrap = False,
-        double_star_wrap = False
+        double_star_wrap = False,
+        as_property = False,
       ):
     # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
 
@@ -214,6 +222,8 @@ class Pipe:
       single star when passed into func
     double_star_wrap - If true objects from the pipe will have will be unpacked
       with a double star when passed into func
+    as_property - if true the method will be added as a property instead of a method
+      so that () will not have to be used to call it
     '''
     def map_method_wrap(*args, **kargs):
       '''
@@ -238,6 +248,7 @@ class Pipe:
         gener = map_method_wrap,
         gener_name = func_name if func_name else func.__name__,
         no_over_write = no_over_write,
+        as_property = as_property,
       )
 
   @classmethod

@@ -80,24 +80,30 @@ class TestPipe(unittest.TestCase):
     self.assertTrue(isinstance(Pipe().enumerate, types.MethodType))
 
     # test added method
-    data_1 = 1, 2, 3, 4
+    data = 1, 2, 3, 4
 
     self.assertEqual(
-        tuple(Pipe(data_1).enumerate()),
-        tuple(enumerate(data_1))
+        tuple(Pipe(data).enumerate()),
+        tuple(enumerate(data))
       )
     self.assertEqual(
-        tuple(Pipe(data_1).enumerate(2)),
-        tuple(enumerate(data_1, 2))
+        tuple(Pipe(data).enumerate(2)),
+        tuple(enumerate(data, 2))
       )
     self.assertEqual(
-        tuple(Pipe(data_1).enumerate(start=2)),
-        tuple(enumerate(data_1, start=2))
+        tuple(Pipe(data).enumerate(start=2)),
+        tuple(enumerate(data, start=2))
       )
 
-    # stared arg
-    Pipe.add_method
+  def test_add_method_as_property(self):
+    data = 1, 2, 3, 4
 
+    Pipe.add_method(enumerate, as_property=True)
+
+    self.assertEqual(
+        tuple(Pipe(data).enumerate),
+        tuple(enumerate(data))
+      )
 
   def test_add_method_star_int(self):
     '''

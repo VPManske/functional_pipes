@@ -99,11 +99,13 @@ bypass_definitions = (
         merge = lambda val, bypass_key: (bypass_key, val),
       ),
     dict(
+        # dict_carry_open
         open_name = dict_carry_open.open_name,
         close_name = dict_carry_open.close_name,
         open_bypass = property(dict_carry_open),
       ),
     dict(
+        # dict_key
         open_name = dict_key.open_name,
         open_bypass = property(dict_key),
       ),
