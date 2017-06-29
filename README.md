@@ -232,7 +232,8 @@ Pipe.**type_keyed**()
 ### Import
 To import the built in functions methods run code below. This will add the methods defined in built_in_functions.py to the Pipe class.  
 ```python
-from functional_pipes import Pipe, custom_pipes
+from functional_pipes import Pipe
+Pipe('custom_pipes')
 ```
 
 Pipe.**zip_internal**()  
