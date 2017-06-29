@@ -66,7 +66,7 @@ class TestPipe(unittest.TestCase):
     with self.assertRaises(AttributeError):
       Pipe.add_method(enumerate)
     with self.assertRaises(AttributeError):
-      Pipe.add_method(map, gener_name='enumerate')
+      Pipe.add_method(map, name='enumerate')
 
     # no_over_write is False
     Pipe.add_method(enumerate, no_over_write=False)

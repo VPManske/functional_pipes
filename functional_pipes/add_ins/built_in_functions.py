@@ -15,34 +15,34 @@ methods_to_add = (
     dict(gener=any, is_valve=True),
     dict(gener=max, is_valve=True, star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
     dict(gener=min, is_valve=True, star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
-    dict(gener=max, gener_name='max_kargs', is_valve=True, double_star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
-    dict(gener=min, gener_name='min_kargs', is_valve=True, double_star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
+    dict(gener=max, name='max_kargs', is_valve=True, double_star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
+    dict(gener=min, name='min_kargs', is_valve=True, double_star_wrap='key', empty_error=ValueError),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
     dict(gener=sum, is_valve=True),
 
     # iterable valves
     dict(gener=sorted, is_valve=True, star_wrap='key'),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
-    dict(gener=sorted, gener_name='sorted_kargs', is_valve=True, double_star_wrap='key'),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
+    dict(gener=sorted, name='sorted_kargs', is_valve=True, double_star_wrap='key'),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
 
     # non valve functions
     dict(gener=enumerate),
     dict(gener=filter, iter_index=1, star_wrap=0),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
-    dict(gener=filter, gener_name='filter_kargs', iter_index=1, double_star_wrap=0),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
+    dict(gener=filter, name='filter_kargs', iter_index=1, double_star_wrap=0),  # https://github.com/BebeSparkelSparkel/functional_pipes/issues/3
     dict(gener=zip),
   )
 
 
 map_methods_to_add = (
-    dict(func=dict, func_name='dict_e'),
-    dict(func=frozenset, func_name='frozenset_e'),
-    dict(func=set, func_name='set_e'),
-    dict(func=list, func_name='list_e'),
-    dict(func=tuple, func_name='tuple_e'),
-    dict(func=reversed, func_name='reversed_e'),
+    dict(func=dict, name='dict_e'),
+    dict(func=frozenset, name='frozenset_e'),
+    dict(func=set, name='set_e'),
+    dict(func=list, name='list_e'),
+    dict(func=tuple, name='tuple_e'),
+    dict(func=reversed, name='reversed_e'),
 
-    dict(func=sorted, func_name='sorted_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    dict(func=max, func_name='max_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    dict(func=min, func_name='min_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
-    dict(func=sum, func_name='sum_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+    dict(func=sorted, name='sorted_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+    dict(func=max, name='max_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+    dict(func=min, name='min_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
+    dict(func=sum, name='sum_e'), # https://github.com/BebeSparkelSparkel/functional_pipes/issues/4
 
     str,
     abs,

@@ -8,7 +8,7 @@ import more_itertools as mi
 # gener,
 # is_valve = False,
 # iter_index = 0,
-# gener_name = None,
+# name = None,
 # no_over_write = True,
 # empty_error = None,
 # star_wrap = None,
@@ -21,9 +21,9 @@ methods_to_add = (
 
   # non valve
   dict(gener=mi.split_before, star_wrap=1),
-  dict(gener=mi.split_before, gener_name='split_before_kargs',  double_star_wrap='pred'),
+  dict(gener=mi.split_before, name='split_before_kargs',  double_star_wrap='pred'),
   dict(gener=mi.split_after, star_wrap=1),
-  dict(gener=mi.split_after, gener_name='split_after_kargs',  double_star_wrap='pred'),
+  dict(gener=mi.split_after, name='split_after_kargs',  double_star_wrap='pred'),
 
 )
 maps_to_add = (

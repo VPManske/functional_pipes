@@ -18,8 +18,8 @@ class TestLoad(unittest.TestCase):
       returns the name that the method has been added to Pipe as
       '''
       if isinstance(method, dict):
-        if 'func_name' in method:
-          name = method['func_name']
+        if 'name' in method:
+          name = method['name']
         elif 'gener' in method:
           name = method['gener'].__name__
         elif 'func' in method:

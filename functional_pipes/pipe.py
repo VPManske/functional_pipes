@@ -61,7 +61,7 @@ class Pipe:
         gener,
         is_valve = False,
         iter_index = 0,
-        gener_name = None,
+        name = None,
         no_over_write = True,
         empty_error = None,
         star_wrap = None,
@@ -79,12 +79,12 @@ class Pipe:
       For enumerate(iterable, start=0) iter_index is 0
       For filter(function, iterable) iter_index is 1
 
-    gener_name - Unnecessary if gener.__name__ is defined correctly.
+    name - Unnecessary if gener.__name__ is defined correctly.
       string that the gener will be called by.
       Has precedence over gener.__name__
 
     no_over_write - If True an AttributeError will be raised if there is already a method with
-      the gener_name or gener.__name__. If False any method will be overwritten.
+      the name or gener.__name__. If False any method will be overwritten.
 
     empty_error - error that is thrown if gener recieves an empty iterator.
       Only applies if is_valve is True.
@@ -109,11 +109,11 @@ class Pipe:
     add_wrapper - if True a wrapper will be put on the method else no wrapper
       Should be False if method returns a Pipe object
     '''
-    if not gener_name:
-      gener_name = gener.__name__
+    if not name:
+      name = gener.__name__
 
-    if no_over_write and hasattr(cls, gener_name):
-      raise AttributeError('Pipe class already has the gener ' + gener_name)
+    if no_over_write and hasattr(cls, name):
+      raise AttributeError('Pipe class already has the gener ' + name)
 
     '''
     Creates a wrapped generator that can be added to the class Pipe.
@@ -199,14 +199,14 @@ class Pipe:
       wrapper = property(wrapper)
 
     # sets the wrapped function as a method in Pipe
-    setattr(cls, gener_name, wrapper)
+    setattr(cls, name, wrapper)
 
-    return gener_name
+    return name
 
   @classmethod
   def add_map_method(cls,
         func,
-        func_name = None,
+        name = None,
         no_over_write = True,
         star_wrap = False,
         double_star_wrap = False,
@@ -220,11 +220,11 @@ class Pipe:
     returns the string of the method name
 
     func - must be a function.
-      if a lambda function func_name must be a string for the method name.
-    func_name - the Pipe method name
+      if a lambda function name must be a string for the method name.
+    name - the Pipe method name
       defaults to the func.__name__ string if not defined
     no_over_write - If True an AttributeError will be raised if there is already a method with
-      the gener_name or gener.__name__. If False any method will be overwritten.
+      the name or gener.__name__. If False any method will be overwritten.
     star_wrap - If True objects from the pipe will have will be unpacked with a
       single star when passed into func
     double_star_wrap - If true objects from the pipe will have will be unpacked
@@ -253,7 +253,7 @@ class Pipe:
     # returns the string of the method name
     return cls.add_method(
         gener = map_method_wrap,
-        gener_name = func_name if func_name else func.__name__,
+        name = name if name else func.__name__,
         no_over_write = no_over_write,
         as_property = as_property,
       )

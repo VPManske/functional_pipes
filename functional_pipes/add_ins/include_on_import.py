@@ -39,7 +39,7 @@ class grab:
 
 methods_to_add = (
     dict(gener=map, iter_index=1, star_wrap=0),
-    dict(gener=map, gener_name='map_kargs', iter_index=1, double_star_wrap=0),
+    dict(gener=map, name='map_kargs', iter_index=1, double_star_wrap=0),
     wrap_gener(flatten),
     dict(gener=grab, as_property=True),
   )

@@ -88,6 +88,7 @@ bypass_definitions = (
         merge = lambda key, bypass_val: (key, bypass_val),
       ),
     dict(
+      # this should be changed to a map method
         open_name = 'keyed',
         split = lambda value: (value, value),
         merge = lambda key, bypass_val: (key, bypass_val),
